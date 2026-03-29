@@ -61,27 +61,27 @@ const CREATURES = [
 
 // ─── MAP WAYPOINTS (coordinates for viewBox 0 0 100 40) ───
 const MAP_WAYPOINTS = [
-  { x: 8, y: 35, type: 'start', zone: 'Campement', label: '🏕️' },
-  { x: 12, y: 31, type: 'normal', zone: 'Forêt', label: '1' },
-  { x: 16, y: 27, type: 'normal', zone: 'Forêt', label: '2' },
-  { x: 20, y: 23, type: 'normal', zone: 'Forêt', label: '3' },
-  { x: 24, y: 19, type: 'normal', zone: 'Forêt', label: '4' },
-  { x: 28, y: 17, type: 'boss', zone: 'Forêt', label: '⚔️' },
-  { x: 35, y: 14, type: 'normal', zone: 'Montagne', label: '6' },
-  { x: 40, y: 11, type: 'normal', zone: 'Montagne', label: '7' },
-  { x: 44, y: 9, type: 'normal', zone: 'Montagne', label: '8' },
-  { x: 48, y: 7, type: 'normal', zone: 'Montagne', label: '9' },
-  { x: 52, y: 6, type: 'boss', zone: 'Montagne', label: '⚔️' },
-  { x: 58, y: 10, type: 'normal', zone: 'Rivière', label: '11' },
-  { x: 62, y: 14, type: 'normal', zone: 'Rivière', label: '12' },
-  { x: 66, y: 18, type: 'normal', zone: 'Rivière', label: '13' },
-  { x: 70, y: 21, type: 'normal', zone: 'Rivière', label: '14' },
-  { x: 74, y: 23, type: 'boss', zone: 'Rivière', label: '⚔️' },
-  { x: 80, y: 21, type: 'normal', zone: 'Château', label: '16' },
-  { x: 84, y: 18, type: 'normal', zone: 'Château', label: '17' },
-  { x: 88, y: 15, type: 'normal', zone: 'Château', label: '18' },
-  { x: 91, y: 13, type: 'normal', zone: 'Château', label: '19' },
-  { x: 94, y: 10, type: 'treasure', zone: 'Château', label: '🏆' },
+  { x: 6, y: 36, type: 'start', zone: 'Campement', label: '🏕️' },
+  { x: 10, y: 32, type: 'normal', zone: 'Forêt', label: '1' },
+  { x: 14, y: 28, type: 'normal', zone: 'Forêt', label: '2' },
+  { x: 18, y: 24, type: 'normal', zone: 'Forêt', label: '3' },
+  { x: 22, y: 20, type: 'normal', zone: 'Forêt', label: '4' },
+  { x: 26, y: 18, type: 'boss', zone: 'Forêt', label: '⚔️' },
+  { x: 30, y: 16, type: 'normal', zone: 'Montagne', label: '6' },
+  { x: 34, y: 14, type: 'normal', zone: 'Montagne', label: '7' },
+  { x: 38, y: 12, type: 'normal', zone: 'Montagne', label: '8' },
+  { x: 42, y: 10, type: 'normal', zone: 'Montagne', label: '9' },
+  { x: 46, y: 8, type: 'boss', zone: 'Montagne', label: '⚔️' },
+  { x: 50, y: 10, type: 'normal', zone: 'Rivière', label: '11' },
+  { x: 54, y: 13, type: 'normal', zone: 'Rivière', label: '12' },
+  { x: 58, y: 16, type: 'normal', zone: 'Rivière', label: '13' },
+  { x: 62, y: 19, type: 'normal', zone: 'Rivière', label: '14' },
+  { x: 66, y: 21, type: 'boss', zone: 'Rivière', label: '⚔️' },
+  { x: 70, y: 19, type: 'normal', zone: 'Château', label: '16' },
+  { x: 74, y: 17, type: 'normal', zone: 'Château', label: '17' },
+  { x: 78, y: 15, type: 'normal', zone: 'Château', label: '18' },
+  { x: 82, y: 13, type: 'normal', zone: 'Château', label: '19' },
+  { x: 86, y: 11, type: 'boss', zone: 'Château', label: '⚔️' },
 ];
 
 // ─── MILESTONES & ACHIEVEMENTS ───
@@ -758,9 +758,9 @@ export default function App() {
   const proceedAfterWin = () => {
     setNewCreature(null);
     if (isBoss) { setIsBoss(false); setShowMap(true); return; }
-    // Show map before each boss (at positions 4, 9, 14, 19)
+    // Show map before each boss (every 5 words: positions 5, 10, 15, 20)
     const nextIdx = currentIdx + 1;
-    if ([4, 9, 14, 19].includes(nextIdx) && nextIdx < wordQueue.length) {
+    if ((nextIdx + 1) % 5 === 0 && nextIdx < wordQueue.length) {
       setShowFullMap(true);
       setTimeout(() => {
         setShowFullMap(false);
@@ -893,6 +893,9 @@ export default function App() {
       {/* VICTORY */}
       {screen === "victory" && (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out"}}>
+          <div style={{maxWidth:400,width:"90%",marginBottom:16,borderRadius:16,overflow:"hidden",border:"3px solid #fbbf24",boxShadow:"0 8px 30px rgba(251,191,36,0.4)"}}>
+            <img src="/victory.png" alt="Victoire" style={{width:"100%",height:"auto",display:"block"}} onError={(e) => e.target.style.display = 'none'} />
+          </div>
           <div style={{fontSize:"4rem",marginBottom:10,animation:"float 2s ease-in-out infinite"}}>🏆</div>
           <h2 style={{color:"#fbbf24",fontSize:"1.8rem",textShadow:"0 2px 15px rgba(251,191,36,0.4)",marginBottom:8}}>Trésor trouvé !</h2>
           <p style={{color:"#d4a574",marginBottom:20,textAlign:"center",maxWidth:280}}>Bravo Léo ! Aventure terminée !</p>
