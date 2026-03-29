@@ -903,21 +903,25 @@ export default function App() {
 
       {/* TITLE */}
       {screen === "splash" && (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20}} onClick={() => setScreen("title")}>
-          <div style={{fontSize:"5rem",marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏔️</div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,cursor:"pointer"}} onClick={() => setScreen("title")}>
+          <div style={{maxWidth:500,width:"95%",marginBottom:20,borderRadius:16,overflow:"hidden",border:"3px solid #fbbf24",boxShadow:"0 8px 40px rgba(251,191,36,0.3)"}}>
+            <img src="/START.png" alt="Aventure" style={{width:"100%",height:"auto",display:"block"}} />
+          </div>
           <h1 style={{color:"#fbbf24",fontSize:"clamp(1.8rem,7vw,2.8rem)",textAlign:"center",textShadow:"0 2px 20px rgba(251,191,36,0.4)",marginBottom:6,lineHeight:1.2}}>Mots Jules Simon</h1>
           <p style={{color:"#d4a574",marginBottom:6,fontSize:"1.1rem"}}>L'Aventure des Mots de Léo</p>
-          <p style={{color:"#a3836a",marginBottom:30,fontSize:"0.8rem"}}>Un jeu d'orthographe et d'aventure</p>
+          <p style={{color:"#a3836a",marginBottom:24,fontSize:"0.8rem"}}>Un jeu d'orthographe et d'aventure</p>
           <button style={{padding:"20px 48px",borderRadius:20,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.5rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 6px 0 #92400e,0 10px 40px rgba(245,158,11,0.3)",animation:"pulse 2s ease-in-out infinite"}}>
             ▶ Jouer
           </button>
-          <p style={{color:"#6b5c4d",fontSize:"0.7rem",marginTop:20}}>Touche n'importe où pour commencer</p>
+          <p style={{color:"#6b5c4d",fontSize:"0.7rem",marginTop:16}}>Touche n'importe où pour commencer</p>
         </div>
       )}
 
       {screen === "title" && (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out"}}>
-          <div style={{fontSize:"4rem",marginBottom:8,animation:"float 3s ease-in-out infinite"}}>🏔️</div>
+          <div style={{maxWidth:420,width:"90%",marginBottom:14,borderRadius:14,overflow:"hidden",border:"2px solid rgba(251,191,36,0.4)",boxShadow:"0 6px 30px rgba(251,191,36,0.2)"}}>
+            <img src="/START.png" alt="Aventure" style={{width:"100%",height:"auto",display:"block"}} />
+          </div>
           <h1 style={{color:"#fbbf24",fontSize:"clamp(1.6rem,6vw,2.4rem)",textAlign:"center",textShadow:"0 2px 20px rgba(251,191,36,0.4)",marginBottom:4,lineHeight:1.2}}>L'Aventure des Mots</h1>
           <p style={{color:"#d4a574",marginBottom:4,fontSize:"1rem"}}>de Léo l'Explorateur</p>
           {nextCreature && <p style={{color:"#a3836a",fontSize:"0.8rem",marginBottom:4}}>Prochaine créature : {nextCreature.emoji} dans {nextCreature.at - totalWins} mot{nextCreature.at-totalWins>1?"s":""}</p>}
