@@ -59,29 +59,29 @@ const CREATURES = [
   { name: "Lion Céleste", emoji: "🦁", at: 39 },
 ];
 
-// ─── MAP WAYPOINTS (coordinates for viewBox 0 0 100 40) ───
+// ─── MAP WAYPOINTS (coordinates for viewBox 0 0 100 40, matching adventure-map.png) ───
 const MAP_WAYPOINTS = [
-  { x: 6, y: 36, type: 'start', zone: 'Campement', label: '🏕️' },
-  { x: 10, y: 32, type: 'normal', zone: 'Forêt', label: '1' },
-  { x: 14, y: 28, type: 'normal', zone: 'Forêt', label: '2' },
-  { x: 18, y: 24, type: 'normal', zone: 'Forêt', label: '3' },
-  { x: 22, y: 20, type: 'normal', zone: 'Forêt', label: '4' },
-  { x: 26, y: 18, type: 'boss', zone: 'Forêt', label: '⚔️' },
-  { x: 30, y: 16, type: 'normal', zone: 'Montagne', label: '6' },
-  { x: 34, y: 14, type: 'normal', zone: 'Montagne', label: '7' },
-  { x: 38, y: 12, type: 'normal', zone: 'Montagne', label: '8' },
-  { x: 42, y: 10, type: 'normal', zone: 'Montagne', label: '9' },
-  { x: 46, y: 8, type: 'boss', zone: 'Montagne', label: '⚔️' },
-  { x: 50, y: 10, type: 'normal', zone: 'Rivière', label: '11' },
-  { x: 54, y: 13, type: 'normal', zone: 'Rivière', label: '12' },
-  { x: 58, y: 16, type: 'normal', zone: 'Rivière', label: '13' },
-  { x: 62, y: 19, type: 'normal', zone: 'Rivière', label: '14' },
-  { x: 66, y: 21, type: 'boss', zone: 'Rivière', label: '⚔️' },
-  { x: 70, y: 19, type: 'normal', zone: 'Château', label: '16' },
-  { x: 74, y: 17, type: 'normal', zone: 'Château', label: '17' },
-  { x: 78, y: 15, type: 'normal', zone: 'Château', label: '18' },
-  { x: 82, y: 13, type: 'normal', zone: 'Château', label: '19' },
-  { x: 86, y: 11, type: 'boss', zone: 'Château', label: '⚔️' },
+  { x: 8, y: 34, type: 'start', zone: 'Campement', label: '🏕️' },
+  { x: 11, y: 32, type: 'normal', zone: 'Forêt', label: '1' },
+  { x: 14, y: 30, type: 'normal', zone: 'Forêt', label: '2' },
+  { x: 17, y: 28, type: 'normal', zone: 'Forêt', label: '3' },
+  { x: 19, y: 26, type: 'normal', zone: 'Forêt', label: '4' },
+  { x: 22, y: 24, type: 'boss', zone: 'Forêt', label: '⚔️' },
+  { x: 25, y: 21, type: 'normal', zone: 'Montagne', label: '6' },
+  { x: 28, y: 18, type: 'normal', zone: 'Montagne', label: '7' },
+  { x: 31, y: 16, type: 'normal', zone: 'Montagne', label: '8' },
+  { x: 35, y: 13, type: 'normal', zone: 'Montagne', label: '9' },
+  { x: 38, y: 10, type: 'boss', zone: 'Montagne', label: '⚔️' },
+  { x: 42, y: 13, type: 'normal', zone: 'Rivière', label: '11' },
+  { x: 46, y: 16, type: 'normal', zone: 'Rivière', label: '12' },
+  { x: 50, y: 20, type: 'normal', zone: 'Rivière', label: '13' },
+  { x: 54, y: 23, type: 'normal', zone: 'Rivière', label: '14' },
+  { x: 58, y: 26, type: 'boss', zone: 'Rivière', label: '⚔️' },
+  { x: 62, y: 23, type: 'normal', zone: 'Château', label: '16' },
+  { x: 66, y: 20, type: 'normal', zone: 'Château', label: '17' },
+  { x: 70, y: 17, type: 'normal', zone: 'Château', label: '18' },
+  { x: 74, y: 14, type: 'normal', zone: 'Château', label: '19' },
+  { x: 78, y: 12, type: 'boss', zone: 'Château', label: '⚔️' },
 ];
 
 // ─── MILESTONES & ACHIEVEMENTS ───
@@ -171,6 +171,67 @@ function Fireworks({ onDone }) {
     } catch {}
   }, [onDone]);
   return <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", pointerEvents: "none", zIndex: 50 }} />;
+}
+
+// ─── MUSIC MANAGER ───
+const musicRefs = { start: null, game: null, final: null, lost: null };
+function getMusicAudio(key, src, volume, loop = false) {
+  if (!musicRefs[key]) {
+    musicRefs[key] = new Audio(src);
+    musicRefs[key].loop = loop;
+    musicRefs[key].volume = volume;
+  }
+  return musicRefs[key];
+}
+function stopAllMusic() {
+  Object.values(musicRefs).forEach(a => { if (a) { a.pause(); a.currentTime = 0; } });
+}
+
+function MusicController({ screen, musicOn }) {
+  const triedAutoPlay = useRef(false);
+
+  const playForScreen = useCallback(() => {
+    if (!musicOn) { stopAllMusic(); return; }
+    stopAllMusic();
+    try {
+      if (screen === "title") {
+        const a = getMusicAudio("start", "/Start.mp3", 0.5);
+        a.play().catch(() => {});
+      } else if (screen === "play") {
+        const a = getMusicAudio("game", "/Game.mp3", 0.10, true);
+        a.play().catch(() => {});
+      } else if (screen === "victory") {
+        const a = getMusicAudio("final", "/Final.mp3", 0.6);
+        a.play().catch(() => {});
+      } else if (screen === "gameover") {
+        const a = getMusicAudio("lost", "/Lost.mp3", 0.45);
+        a.play().catch(() => {});
+      }
+    } catch {}
+  }, [screen, musicOn]);
+
+  // Auto-start on first user interaction (browsers block autoplay)
+  useEffect(() => {
+    if (triedAutoPlay.current) return;
+    const startOnInteraction = () => {
+      triedAutoPlay.current = true;
+      playForScreen();
+      document.removeEventListener("click", startOnInteraction);
+      document.removeEventListener("touchstart", startOnInteraction);
+      document.removeEventListener("keydown", startOnInteraction);
+    };
+    document.addEventListener("click", startOnInteraction);
+    document.addEventListener("touchstart", startOnInteraction);
+    document.addEventListener("keydown", startOnInteraction);
+    return () => {
+      document.removeEventListener("click", startOnInteraction);
+      document.removeEventListener("touchstart", startOnInteraction);
+      document.removeEventListener("keydown", startOnInteraction);
+    };
+  }, [playForScreen]);
+
+  useEffect(() => { playForScreen(); }, [playForScreen]);
+  return null;
 }
 
 // ─── MAP FIREWORKS ───
@@ -280,7 +341,7 @@ function MapView({ currentWaypoint, completedWaypoints, onContinue, isPreBoss })
       <div style={{ position: "relative", width: "100%", maxWidth: "min(600px, 95vw)", margin: "0 auto", borderRadius: "clamp(8px, 2vw, 12px)", overflow: "hidden", border: "2px solid rgba(251,191,36,0.3)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
         <img ref={mapRef} src="/adventure-map.png" alt="Carte d'aventure" style={{ width: "100%", height: "auto", display: "block" }} />
         
-        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 100 40" preserveAspectRatio="xMidYMid meet">
+        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 100 40" preserveAspectRatio="none">
           {MAP_WAYPOINTS.map((wp, idx) => {
             const isCompleted = completedWaypoints.has(idx);
             const isCurrent = idx === currentWaypoint;
@@ -413,7 +474,7 @@ function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
         const errs=new Set();
         for(let i=0;i<clean.length;i++) if(newSel[i]?.letter!==clean[i]) errs.add(i);
         setErrorSlots(errs);
-        setShowTip(true); setBoughtTip(true);
+        setShowTip(true);
         onFail();
         setTimeout(()=>{
           const kept=[...newSel]; const ret=[];
@@ -436,7 +497,8 @@ function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
         <SoundButton word={wordObj.word} size={32}/>
         {!boughtTip && <PaidHintButton label="💡" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>}
       </div>
-      {showTip && <TipBox text={wordObj.tip}/>}
+      {showTip && !boughtTip && <TipBox text={`Le mot a ${clean.length} lettres et commence par « ${clean[0]} ».`}/>}
+      {showTip && boughtTip && <TipBox text={wordObj.tip}/>}
       <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:4,minHeight:48,marginBottom:16,flexWrap:"wrap",marginTop:10}}>
         {prefix && <span style={{color:"#fbbf24",fontSize:"1.2rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",marginRight:4}}>{prefix}</span>}
         {clean.split("").map((_,i)=>{
@@ -474,7 +536,7 @@ function WriteGame({ wordObj, onWin, onFail, score, onSpend }) {
     if(!input.trim()) return;
     const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ");
     if(norm(input)===norm(target)||norm(input)===norm(wordObj.word)) { setStatus("win"); setTimeout(()=>onWin(),300); }
-    else { setStatus("fail"); setShowTip(true); setBoughtTip(true); setShowAnswer(true); onFail(); setTimeout(()=>{setStatus(null);setInput("");setShowAnswer(false);},2500); }
+    else { setStatus("fail"); setShowTip(true); setBoughtTip(true); setShowAnswer(true); onFail(); setTimeout(()=>{setStatus(null);setInput("");setShowAnswer(false);},1500); }
   };
 
   return (
@@ -506,7 +568,7 @@ function ListenGame({ wordObj, onWin, onFail, score, onSpend }) {
   const submit=()=>{
     if(!input.trim())return;const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ");
     if(norm(input)===norm(wordObj.word)||norm(input)===norm(wordObj.game)){setStatus("win");setTimeout(()=>onWin(),300);}
-    else{setStatus("fail");setRevealed(true);setShowTip(true);setBoughtTip(true);onFail();setTimeout(()=>{setStatus(null);setInput("");setRevealed(false);},2500);}
+    else{setStatus("fail");setRevealed(true);setShowTip(true);setBoughtTip(true);onFail();setTimeout(()=>{setStatus(null);setInput("");setRevealed(false);},1500);}
   };
   return (
     <div style={{textAlign:"center"}}>
@@ -621,7 +683,7 @@ function Settings({ onBack }) {
 const NORMAL_GAMES = ["scramble", "write", "listen"];
 
 export default function App() {
-  const [screen, setScreen] = useState("title");
+  const [screen, setScreen] = useState("splash");
   const [wordQueue, setWordQueue] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [gameType, setGameType] = useState("");
@@ -642,9 +704,11 @@ export default function App() {
   const [usedHints, setUsedHints] = useState(false);
   const [milestonePopup, setMilestonePopup] = useState(null);
   const [achievements, setAchievements] = useState(getAchievements());
-  const [completedWaypoints, setCompletedWaypoints] = useState(new Set());
   const [showFullMap, setShowFullMap] = useState(false);
   const [zoneStartLives, setZoneStartLives] = useState(5);
+  const [musicOn, setMusicOn] = useState(true);
+  const [bossWord, setBossWord] = useState(null);
+  const [sessionPlayedWords, setSessionPlayedWords] = useState([]);
 
   // Cheat: + adds life
   useEffect(() => {
@@ -676,14 +740,15 @@ export default function App() {
     setShowMap(false); setMapProgress(0); setIsBoss(false);
     setShowFireworks(false); setNewCreature(null);
     setStartTime(Date.now()); setUsedHints(false);
-    setMilestonePopup(null); setCompletedWaypoints(new Set());
+    setMilestonePopup(null);
     setShowFullMap(false); setZoneStartLives(5);
+    setBossWord(null); setSessionPlayedWords([]);
     setScreen("play");
   };
 
   const handleWin = () => {
     setShowFireworks(true);
-    const w = wordQueue[currentIdx];
+    const w = bossWord || wordQueue[currentIdx];
     
     // Calculate response time
     const responseTime = startTime ? Date.now() - startTime : 0;
@@ -741,7 +806,7 @@ export default function App() {
     setStreak(prev => { const n = prev + 1; if (n > maxStreak) setMaxStreak(n); return n; });
     setWordsLearned(prev => new Set([...prev, w.word]));
     setMapProgress(prev => prev + 1);
-    setCompletedWaypoints(prev => new Set([...prev, currentIdx]));
+    setSessionPlayedWords(prev => [...prev, w]);
     
     // Reset for next word
     setStartTime(null);
@@ -757,15 +822,23 @@ export default function App() {
 
   const proceedAfterWin = () => {
     setNewCreature(null);
-    if (isBoss) { setIsBoss(false); setShowMap(true); return; }
-    // Show map before each boss (every 5 words: positions 5, 10, 15, 20)
-    const nextIdx = currentIdx + 1;
-    if ((nextIdx + 1) % 5 === 0 && nextIdx < wordQueue.length) {
+    // After boss victory: clear boss word, show zone recap
+    if (isBoss) { setIsBoss(false); setBossWord(null); setShowMap(true); return; }
+    // Check if boss should trigger (after every 5 normal words: indices 4, 9, 14, 19)
+    if ((currentIdx + 1) % 5 === 0 && currentIdx < wordQueue.length) {
+      // Pick a revision word from the 5 words just played in this zone
+      const zoneStart = Math.max(0, currentIdx - 4);
+      const zoneWords = wordQueue.slice(zoneStart, currentIdx + 1);
+      const revisionWord = zoneWords[Math.floor(Math.random() * zoneWords.length)];
       setShowFullMap(true);
       setTimeout(() => {
         setShowFullMap(false);
-        nextWord("hangman", true);
-      }, 4000); // Show map for 4 seconds before boss
+        setBossWord(revisionWord);
+        setIsBoss(true);
+        setGameType("hangman");
+        setStartTime(Date.now());
+        setUsedHints(false);
+      }, 4000);
       return;
     }
     nextWord();
@@ -782,17 +855,19 @@ export default function App() {
   };
 
   const handleFail = () => {
-    const w = wordQueue[currentIdx];
+    const w = bossWord || wordQueue[currentIdx];
     const ws = getWordStats(); if (!ws[w.id]) ws[w.id] = { wins: 0, fails: 0 }; ws[w.id].fails++; saveWordStats(ws);
-    setStreak(0); setLives(p => { const n = p - 1; if (n <= 0) setTimeout(() => setScreen("gameover"), 500); return n; });
+    setStreak(0); setUsedHints(true); setLives(p => { const n = p - 1; if (n <= 0) setTimeout(() => setScreen("gameover"), 500); return n; });
   };
 
   const handleSpend = (n) => { setScore(p => Math.max(0, p - n)); setUsedHints(true); };
-  const currentWord = wordQueue[currentIdx];
+  const currentWord = bossWord || wordQueue[currentIdx];
   const progress = wordQueue.length > 0 ? (currentIdx / wordQueue.length) * 100 : 0;
   const zones = ["Forêt Enchantée", "Rivière Mystique", "Montagne Sacrée", "Temple Ancien", "Grotte Secrète", "Village Oublié", "Pont des Étoiles", "Clairière Dorée"];
-  const zoneIdx = Math.floor(mapProgress / 5) % zones.length;
+  const zoneIdx = Math.floor(currentIdx / 5) % zones.length;
   const nextCreature = CREATURES.find(c => c.at > totalWins);
+  const mapWaypoint = Math.min(mapProgress, MAP_WAYPOINTS.length - 1);
+  const completedWaypoints = useMemo(() => { const s = new Set(); for (let i = 0; i < mapProgress; i++) s.add(i); return s; }, [mapProgress]);
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,#1a0a2e 0%,#16213e 30%,#0f3460 60%,#1a3c34 100%)", fontFamily: "'Fredoka',sans-serif", overflow: "hidden", position: "relative" }}>
@@ -810,6 +885,9 @@ export default function App() {
 
       {[...Array(25)].map((_,i)=><div key={i} style={{position:"fixed",width:i%3===0?3:2,height:i%3===0?3:2,borderRadius:"50%",background:"#fff",top:`${Math.random()*50}%`,left:`${Math.random()*100}%`,animation:`twinkle ${2+Math.random()*3}s ease-in-out infinite`,animationDelay:`${Math.random()*3}s`,pointerEvents:"none"}}/>)}
 
+      <MusicController screen={screen} musicOn={musicOn} />
+      <button onClick={() => setMusicOn(p => !p)} style={{position:"fixed",top:10,right:10,zIndex:200,padding:"6px 12px",borderRadius:20,border:"1px solid rgba(251,191,36,0.4)",background:"rgba(0,0,0,0.5)",color:musicOn?"#fbbf24":"#666",fontSize:"0.75rem",fontFamily:"'Fredoka',sans-serif",fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,backdropFilter:"blur(4px)"}}><span style={{fontSize:"1rem"}}>{musicOn ? "🔊" : "🔇"}</span>{musicOn ? "Musique" : "Muet"}</button>
+
       {/* CREATURE UNLOCK MODAL */}
       {newCreature && (
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={proceedAfterWin}>
@@ -824,6 +902,19 @@ export default function App() {
       )}
 
       {/* TITLE */}
+      {screen === "splash" && (
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20}} onClick={() => setScreen("title")}>
+          <div style={{fontSize:"5rem",marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏔️</div>
+          <h1 style={{color:"#fbbf24",fontSize:"clamp(1.8rem,7vw,2.8rem)",textAlign:"center",textShadow:"0 2px 20px rgba(251,191,36,0.4)",marginBottom:6,lineHeight:1.2}}>Mots Jules Simon</h1>
+          <p style={{color:"#d4a574",marginBottom:6,fontSize:"1.1rem"}}>L'Aventure des Mots de Léo</p>
+          <p style={{color:"#a3836a",marginBottom:30,fontSize:"0.8rem"}}>Un jeu d'orthographe et d'aventure</p>
+          <button style={{padding:"20px 48px",borderRadius:20,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.5rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 6px 0 #92400e,0 10px 40px rgba(245,158,11,0.3)",animation:"pulse 2s ease-in-out infinite"}}>
+            ▶ Jouer
+          </button>
+          <p style={{color:"#6b5c4d",fontSize:"0.7rem",marginTop:20}}>Touche n'importe où pour commencer</p>
+        </div>
+      )}
+
       {screen === "title" && (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out"}}>
           <div style={{fontSize:"4rem",marginBottom:8,animation:"float 3s ease-in-out infinite"}}>🏔️</div>
@@ -867,24 +958,38 @@ export default function App() {
             </button>
           </div>
 
-          {showMap && (
+          {showMap && (() => {
+            const zoneStart = Math.max(0, currentIdx - 4);
+            const zoneWords = wordQueue.slice(zoneStart, currentIdx + 1);
+            return (
             <div style={{animation:"slideUp 0.5s ease-out",background:"linear-gradient(135deg,rgba(251,191,36,0.15),rgba(34,197,94,0.1))",borderRadius:16,padding:24,textAlign:"center",border:"1px solid rgba(251,191,36,0.3)",marginBottom:16}}>
               <div style={{fontSize:"2.5rem",marginBottom:8}}>🏕️</div>
               <h3 style={{color:"#fbbf24",marginBottom:4,fontSize:"1.1rem"}}>Zone conquise !</h3>
               <p style={{color:"#d4a574",marginBottom:4,fontSize:"0.9rem"}}>Tu as traversé la <strong>{zones[zoneIdx]}</strong></p>
-              <p style={{color:"#22c55e",marginBottom:14,fontSize:"0.85rem"}}>{wordsLearned.size} mots appris • ⭐ {score}</p>
+              <p style={{color:"#22c55e",marginBottom:10,fontSize:"0.85rem"}}>{wordsLearned.size} mots appris • ⭐ {score}</p>
+              <div style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:14,textAlign:"left"}}>
+                <p style={{color:"#fbbf24",fontSize:"0.8rem",fontWeight:600,marginBottom:8,textAlign:"center"}}>📚 Mots de cette zone :</p>
+                {zoneWords.map((w, i) => (
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                    <span style={{color:"#22c55e",fontSize:"0.9rem"}}>✓</span>
+                    <span style={{color:"#fff",fontSize:"0.9rem",fontWeight:600}}>{w.word}</span>
+                    <span style={{color:"#a3836a",fontSize:"0.75rem",fontStyle:"italic"}}>— {w.hint}</span>
+                  </div>
+                ))}
+              </div>
               <button onClick={()=>nextWord()} style={{padding:"12px 28px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontWeight:700,fontSize:"1rem",fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 3px 0 #92400e"}}>Continuer →</button>
             </div>
-          )}
+            );
+          })()}
 
           {showFullMap ? (
-            <MapView currentWaypoint={currentIdx} completedWaypoints={completedWaypoints} onContinue={() => setShowFullMap(false)} isPreBoss={[4, 9, 14, 19].includes(currentIdx + 1)} />
+            <MapView currentWaypoint={mapWaypoint} completedWaypoints={completedWaypoints} onContinue={() => setShowFullMap(false)} isPreBoss={bossWord !== null} />
           ) : !showMap && (
             <div style={{background:isBoss?"linear-gradient(135deg,rgba(239,68,68,0.2),rgba(120,53,15,0.4))":"linear-gradient(135deg,rgba(120,53,15,0.4),rgba(30,20,10,0.6))",borderRadius:20,padding:"24px 18px",border:isBoss?"1px solid rgba(239,68,68,0.4)":"1px solid rgba(251,191,36,0.2)",animation:isBoss?"bossGlow 2s ease-in-out infinite":"slideUp 0.4s ease-out"}}>
               {gameType==="scramble"&&<ScrambleGame key={currentIdx+"-s"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
               {gameType==="write"&&<WriteGame key={currentIdx+"-w"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
               {gameType==="listen"&&<ListenGame key={currentIdx+"-l"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
-              {gameType==="hangman"&&<HangmanGame key={currentIdx+"-h"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} isBoss={isBoss}/>}
+              {gameType==="hangman"&&<HangmanGame key={currentIdx+"-h"+(bossWord?"-boss":"")} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} isBoss={isBoss}/>}
             </div>
           )}
         </div>
@@ -892,18 +997,29 @@ export default function App() {
 
       {/* VICTORY */}
       {screen === "victory" && (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out"}}>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out",position:"relative"}}>
+          <Fireworks onDone={() => {}} />
           <div style={{maxWidth:400,width:"90%",marginBottom:16,borderRadius:16,overflow:"hidden",border:"3px solid #fbbf24",boxShadow:"0 8px 30px rgba(251,191,36,0.4)"}}>
             <img src="/victory.png" alt="Victoire" style={{width:"100%",height:"auto",display:"block"}} onError={(e) => e.target.style.display = 'none'} />
           </div>
           <div style={{fontSize:"4rem",marginBottom:10,animation:"float 2s ease-in-out infinite"}}>🏆</div>
           <h2 style={{color:"#fbbf24",fontSize:"1.8rem",textShadow:"0 2px 15px rgba(251,191,36,0.4)",marginBottom:8}}>Trésor trouvé !</h2>
-          <p style={{color:"#d4a574",marginBottom:20,textAlign:"center",maxWidth:280}}>Bravo Léo ! Aventure terminée !</p>
-          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:16,padding:"18px 28px",marginBottom:24,border:"1px solid rgba(251,191,36,0.2)",textAlign:"center"}}>
+          <p style={{color:"#d4a574",marginBottom:16,textAlign:"center",maxWidth:280}}>Bravo Léo ! Aventure terminée !</p>
+          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:16,padding:"18px 28px",marginBottom:16,border:"1px solid rgba(251,191,36,0.2)",textAlign:"center"}}>
             <div style={{color:"#fbbf24",fontSize:"2rem",fontWeight:700,marginBottom:6}}>⭐ {score}</div>
             <div style={{color:"#d4a574",fontSize:"0.9rem",marginBottom:3}}>{wordsLearned.size} mots maîtrisés</div>
             <div style={{color:"#22c55e",fontSize:"0.9rem"}}>🔥 Meilleure série : {maxStreak}</div>
             <div style={{color:"#a3836a",fontSize:"0.85rem",marginTop:6}}>Total : {totalWins} mots • {getUnlocked().size} créatures</div>
+          </div>
+          <div style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:20,width:"90%",maxWidth:400,maxHeight:200,overflowY:"auto",border:"1px solid rgba(251,191,36,0.15)"}}>
+            <p style={{color:"#fbbf24",fontSize:"0.85rem",fontWeight:600,marginBottom:10,textAlign:"center"}}>📚 Tous les mots de l'aventure :</p>
+            {sessionPlayedWords.map((w, i) => (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                <span style={{color: wordsLearned.has(w.word) ? "#22c55e" : "#ef4444",fontSize:"0.85rem"}}>{wordsLearned.has(w.word) ? "✓" : "✗"}</span>
+                <span style={{color:"#fff",fontSize:"0.85rem",fontWeight:600}}>{w.word}</span>
+                <span style={{color:"#a3836a",fontSize:"0.7rem",fontStyle:"italic"}}>— {w.hint}</span>
+              </div>
+            ))}
           </div>
           <button onClick={startGame} style={{padding:"14px 32px",borderRadius:14,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.1rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 4px 0 #92400e"}}>🗺️ Nouvelle aventure !</button>
         </div>
