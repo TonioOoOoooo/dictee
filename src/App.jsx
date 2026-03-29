@@ -59,6 +59,45 @@ const CREATURES = [
   { name: "Lion Céleste", emoji: "🦁", at: 39 },
 ];
 
+// ─── MAP WAYPOINTS (coordinates for viewBox 0 0 100 40) ───
+const MAP_WAYPOINTS = [
+  { x: 8, y: 35, type: 'start', zone: 'Campement', label: '🏕️' },
+  { x: 12, y: 31, type: 'normal', zone: 'Forêt', label: '1' },
+  { x: 16, y: 27, type: 'normal', zone: 'Forêt', label: '2' },
+  { x: 20, y: 23, type: 'normal', zone: 'Forêt', label: '3' },
+  { x: 24, y: 19, type: 'normal', zone: 'Forêt', label: '4' },
+  { x: 28, y: 17, type: 'boss', zone: 'Forêt', label: '⚔️' },
+  { x: 35, y: 14, type: 'normal', zone: 'Montagne', label: '6' },
+  { x: 40, y: 11, type: 'normal', zone: 'Montagne', label: '7' },
+  { x: 44, y: 9, type: 'normal', zone: 'Montagne', label: '8' },
+  { x: 48, y: 7, type: 'normal', zone: 'Montagne', label: '9' },
+  { x: 52, y: 6, type: 'boss', zone: 'Montagne', label: '⚔️' },
+  { x: 58, y: 10, type: 'normal', zone: 'Rivière', label: '11' },
+  { x: 62, y: 14, type: 'normal', zone: 'Rivière', label: '12' },
+  { x: 66, y: 18, type: 'normal', zone: 'Rivière', label: '13' },
+  { x: 70, y: 21, type: 'normal', zone: 'Rivière', label: '14' },
+  { x: 74, y: 23, type: 'boss', zone: 'Rivière', label: '⚔️' },
+  { x: 80, y: 21, type: 'normal', zone: 'Château', label: '16' },
+  { x: 84, y: 18, type: 'normal', zone: 'Château', label: '17' },
+  { x: 88, y: 15, type: 'normal', zone: 'Château', label: '18' },
+  { x: 91, y: 13, type: 'normal', zone: 'Château', label: '19' },
+  { x: 94, y: 10, type: 'treasure', zone: 'Château', label: '🏆' },
+];
+
+// ─── MILESTONES & ACHIEVEMENTS ───
+const MILESTONES = {
+  eclair: { name: '⚡ Éclair', desc: 'Réponse en moins de 5 secondes', bonus: 15, emoji: '⚡' },
+  flash: { name: '💨 Flash', desc: 'Réponse en moins de 10 secondes', bonus: 10, emoji: '💨' },
+  rapide: { name: '🏃 Rapide', desc: 'Réponse en moins de 15 secondes', bonus: 5, emoji: '🏃' },
+  serie3: { name: '🔥 Série de feu', desc: '3 bonnes réponses d\'affilée', bonus: 20, emoji: '🔥🔥🔥' },
+  serie5: { name: '🌟 Imparable', desc: '5 bonnes réponses d\'affilée', bonus: 50, emoji: '🌟' },
+  serie10: { name: '👑 Légende', desc: '10 bonnes réponses d\'affilée', bonus: 100, emoji: '👑' },
+  sansFaute: { name: '✨ Sans faute', desc: 'Zone complétée sans erreur', bonus: 30, emoji: '✨' },
+  premierCoup: { name: '🎯 Premier coup', desc: 'Sans utiliser d\'indices', bonus: 25, emoji: '🎯' },
+  econome: { name: '💰 Économe', desc: 'Finir sans acheter d\'indices', bonus: 40, emoji: '💰' },
+  comeback: { name: '💪 Comeback', desc: 'Gagner avec 1 seule vie', bonus: 35, emoji: '💪' },
+};
+
 const EXTRA_LETTERS = "abcdefghijklmnopqrstuvwxyzéèêàâùûôî".split("");
 const shuffle = (a) => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
 const speakWord = (t) => { const u=new SpeechSynthesisUtterance(t); u.lang="fr-FR"; u.rate=0.75; speechSynthesis.cancel(); speechSynthesis.speak(u); };
@@ -75,6 +114,8 @@ const getUnlocked = () => { const d = loadData(); return new Set(d.unlocked || [
 const saveUnlocked = (s) => { const d = loadData(); d.unlocked = [...s]; saveData(d); };
 const getTotalWins = () => { const d = loadData(); return d.totalWins || 0; };
 const saveTotalWins = (n) => { const d = loadData(); d.totalWins = n; saveData(d); };
+const getAchievements = () => { const d = loadData(); return new Set(d.achievements || []); };
+const saveAchievements = (s) => { const d = loadData(); d.achievements = [...s]; saveData(d); };
 
 // ─── FIREWORKS ───
 function Fireworks({ onDone }) {
@@ -130,6 +171,176 @@ function Fireworks({ onDone }) {
     } catch {}
   }, [onDone]);
   return <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", pointerEvents: "none", zIndex: 50 }} />;
+}
+
+// ─── MAP FIREWORKS ───
+function MapFireworks({ x, y, onDone }) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const particles = [];
+    const colors = ["#fbbf24","#22c55e","#ec4899","#8b5cf6","#ef4444","#3b82f6"];
+    for (let i = 0; i < 25; i++) {
+      const angle = (Math.PI * 2 * i) / 25 + Math.random() * 0.2;
+      const speed = 1.5 + Math.random() * 2.5;
+      particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, color: colors[Math.floor(Math.random() * colors.length)], size: 2 + Math.random() * 2 });
+    }
+    let frame = 0;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.life -= 0.02; p.vx *= 0.98;
+        if (p.life <= 0) continue;
+        alive = true;
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      frame++;
+      if (alive) requestAnimationFrame(animate);
+      else setTimeout(() => onDone?.(), 100);
+    };
+    animate();
+  }, [x, y, onDone]);
+  return null;
+}
+
+// ─── MILESTONE POPUP ───
+function MilestonePopup({ milestone, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2500);
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const playNote = (freq, start, dur) => {
+        const o = ac.createOscillator(); const g = ac.createGain();
+        o.type = "sine"; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.1, ac.currentTime + start);
+        g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + start + dur);
+        o.connect(g); g.connect(ac.destination);
+        o.start(ac.currentTime + start); o.stop(ac.currentTime + start + dur);
+      };
+      playNote(659, 0, 0.1); playNote(784, 0.08, 0.1); playNote(988, 0.16, 0.2);
+    } catch {}
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  
+  return (
+    <div style={{ position: "fixed", top: "20%", left: "50%", transform: "translateX(-50%)", zIndex: 200, animation: "slideUp 0.3s ease-out" }}>
+      <div style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", borderRadius: 16, padding: "20px 32px", textAlign: "center", border: "3px solid #fbbf24", boxShadow: "0 8px 30px rgba(245,158,11,0.5)" }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: 8, animation: "tada 0.6s ease-out" }}>{milestone.emoji}</div>
+        <h3 style={{ color: "#451a03", fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Fredoka',sans-serif", marginBottom: 4 }}>{milestone.name}</h3>
+        <p style={{ color: "#78350f", fontSize: "0.85rem", marginBottom: 8 }}>{milestone.desc}</p>
+        <div style={{ color: "#451a03", fontSize: "1.4rem", fontWeight: 800, fontFamily: "'Fredoka',sans-serif" }}>+{milestone.bonus}⭐</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAP VIEW ───
+function MapView({ currentWaypoint, completedWaypoints, onContinue, isPreBoss }) {
+  const mapRef = useRef(null);
+  const [showFireworks, setShowFireworks] = useState(false);
+  const [fireworksPos, setFireworksPos] = useState({ x: 0, y: 0 });
+  const [animatingTo, setAnimatingTo] = useState(null);
+
+  useEffect(() => {
+    if (currentWaypoint > 0 && currentWaypoint <= MAP_WAYPOINTS.length) {
+      const wp = MAP_WAYPOINTS[currentWaypoint - 1];
+      if (mapRef.current) {
+        const rect = mapRef.current.getBoundingClientRect();
+        const x = (wp.x / 100) * rect.width;
+        const y = (wp.y / 100) * rect.height;
+        setFireworksPos({ x, y });
+        setShowFireworks(true);
+        setAnimatingTo(currentWaypoint - 1);
+      }
+    }
+  }, [currentWaypoint]);
+
+  const handleFireworksDone = () => {
+    setShowFireworks(false);
+    setAnimatingTo(null);
+  };
+
+  return (
+    <div style={{ background: "linear-gradient(135deg,rgba(120,53,15,0.4),rgba(30,20,10,0.6))", borderRadius: "clamp(12px, 3vw, 20px)", padding: "clamp(12px, 4vw, 20px)", border: "1px solid rgba(251,191,36,0.2)", animation: "slideUp 0.5s ease-out", maxWidth: "100%" }}>
+      {isPreBoss && (
+        <div style={{ textAlign: "center", marginBottom: 16, animation: "pulse 2s ease-in-out infinite" }}>
+          <h3 style={{ color: "#ef4444", fontFamily: "'Fredoka',sans-serif", fontSize: "clamp(1rem, 4vw, 1.3rem)", marginBottom: 8 }}>⚔️ BOSS À VENIR ! ⚔️</h3>
+          <p style={{ color: "#fbbf24", fontSize: "clamp(0.8rem, 3vw, 0.95rem)" }}>Prépare-toi pour le combat...</p>
+        </div>
+      )}
+      
+      <h3 style={{ color: "#fbbf24", fontFamily: "'Fredoka',sans-serif", fontSize: "clamp(1rem, 4vw, 1.2rem)", textAlign: "center", marginBottom: 12 }}>🗺️ Carte de l'Aventure</h3>
+      
+      <div style={{ position: "relative", width: "100%", maxWidth: "min(600px, 95vw)", margin: "0 auto", borderRadius: "clamp(8px, 2vw, 12px)", overflow: "hidden", border: "2px solid rgba(251,191,36,0.3)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+        <img ref={mapRef} src="/adventure-map.png" alt="Carte d'aventure" style={{ width: "100%", height: "auto", display: "block" }} />
+        
+        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 100 40" preserveAspectRatio="xMidYMid meet">
+          {MAP_WAYPOINTS.map((wp, idx) => {
+            const isCompleted = completedWaypoints.has(idx);
+            const isCurrent = idx === currentWaypoint;
+            const isAnimating = idx === animatingTo;
+            const isBoss = wp.type === 'boss' || wp.type === 'treasure';
+            
+            return (
+              <g key={idx}>
+                <circle
+                  cx={wp.x}
+                  cy={wp.y}
+                  r={isBoss ? 2.2 : 1.8}
+                  fill={isCompleted ? "#22c55e" : isCurrent ? "#fbbf24" : "rgba(100,100,100,0.5)"}
+                  stroke={isCurrent ? "#f59e0b" : isCompleted ? "#16a34a" : "#888"}
+                  strokeWidth="0.3"
+                  style={{ 
+                    filter: isCurrent ? "drop-shadow(0 0 1px #fbbf24)" : isCompleted ? "drop-shadow(0 0 0.5px #22c55e)" : "none",
+                    animation: isCurrent ? "pulse 1.5s ease-in-out infinite" : "none"
+                  }}
+                />
+                {isCompleted && (
+                  <text x={wp.x} y={wp.y + 0.5} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize="1.8" fontWeight="bold">✓</text>
+                )}
+                {isCurrent && (
+                  <text x={wp.x} y={wp.y - 3.5} textAnchor="middle" fontSize="3.5" style={{ animation: isAnimating ? "float 1s ease-in-out" : "none" }}>🧑‍🌾</text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+
+        {showFireworks && mapRef.current && (
+          <canvas 
+            ref={canvas => {
+              if (canvas && !canvas.dataset.initialized) {
+                canvas.width = mapRef.current.offsetWidth;
+                canvas.height = mapRef.current.offsetHeight;
+                canvas.dataset.initialized = "true";
+              }
+            }}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+          />
+        )}
+        {showFireworks && <MapFireworks x={fireworksPos.x} y={fireworksPos.y} onDone={handleFireworksDone} />}
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: "clamp(12px, 3vw, 16px)", color: "#d4a574", fontSize: "clamp(0.8rem, 3vw, 0.9rem)" }}>
+        <p style={{ marginBottom: 8 }}>📍 {MAP_WAYPOINTS[Math.min(currentWaypoint, MAP_WAYPOINTS.length - 1)]?.zone}</p>
+        <p style={{ color: "#a3836a", fontSize: "clamp(0.7rem, 2.5vw, 0.8rem)" }}>Étape {currentWaypoint + 1}/{MAP_WAYPOINTS.length}</p>
+      </div>
+
+      {onContinue && (
+        <div style={{ textAlign: "center", marginTop: "clamp(12px, 3vw, 16px)" }}>
+          <button onClick={onContinue} style={{ padding: "clamp(10px, 2.5vw, 12px) clamp(20px, 5vw, 28px)", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#451a03", fontWeight: 700, fontSize: "clamp(0.9rem, 3vw, 1rem)", fontFamily: "'Fredoka',sans-serif", cursor: "pointer", boxShadow: "0 3px 0 #92400e" }}>
+            Continuer l'aventure →
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── SOUND BUTTON ───
@@ -425,6 +636,15 @@ export default function App() {
   const [showFireworks, setShowFireworks] = useState(false);
   const [newCreature, setNewCreature] = useState(null);
   const [totalWins, setTotalWins] = useState(getTotalWins());
+  
+  // New: Milestones & Map
+  const [startTime, setStartTime] = useState(null);
+  const [usedHints, setUsedHints] = useState(false);
+  const [milestonePopup, setMilestonePopup] = useState(null);
+  const [achievements, setAchievements] = useState(getAchievements());
+  const [completedWaypoints, setCompletedWaypoints] = useState(new Set());
+  const [showFullMap, setShowFullMap] = useState(false);
+  const [zoneStartLives, setZoneStartLives] = useState(5);
 
   // Cheat: + adds life
   useEffect(() => {
@@ -455,25 +675,77 @@ export default function App() {
     setStreak(0); setMaxStreak(0); setWordsLearned(new Set());
     setShowMap(false); setMapProgress(0); setIsBoss(false);
     setShowFireworks(false); setNewCreature(null);
+    setStartTime(Date.now()); setUsedHints(false);
+    setMilestonePopup(null); setCompletedWaypoints(new Set());
+    setShowFullMap(false); setZoneStartLives(5);
     setScreen("play");
   };
 
   const handleWin = () => {
     setShowFireworks(true);
     const w = wordQueue[currentIdx];
+    
+    // Calculate response time
+    const responseTime = startTime ? Date.now() - startTime : 0;
+    
     // Update stats
     const ws = getWordStats(); if (!ws[w.id]) ws[w.id] = { wins: 0, fails: 0 }; ws[w.id].wins++; saveWordStats(ws);
     const newTotal = totalWins + 1; setTotalWins(newTotal); saveTotalWins(newTotal);
+    
     // Check creature unlock
     const unlocked = getUnlocked();
     const justUnlocked = CREATURES.find(c => c.at === newTotal && !unlocked.has(c.name));
     if (justUnlocked) { unlocked.add(justUnlocked.name); saveUnlocked(unlocked); setNewCreature(justUnlocked); }
 
-    const bonus = isBoss ? 25 : 10;
+    // Base bonus
+    let bonus = isBoss ? 25 : 10;
+    
+    // Check milestones
+    const newStreak = streak + 1;
+    const milestones = [];
+    
+    // Speed milestones
+    if (responseTime < 5000 && responseTime > 0) milestones.push('eclair');
+    else if (responseTime < 10000 && responseTime > 0) milestones.push('flash');
+    else if (responseTime < 15000 && responseTime > 0) milestones.push('rapide');
+    
+    // Streak milestones
+    if (newStreak === 3) milestones.push('serie3');
+    else if (newStreak === 5) milestones.push('serie5');
+    else if (newStreak === 10) milestones.push('serie10');
+    
+    // No hints milestone
+    if (!usedHints) milestones.push('premierCoup');
+    
+    // Comeback milestone (1 life left)
+    if (lives === 1) milestones.push('comeback');
+    
+    // Add milestone bonuses and show popup
+    if (milestones.length > 0) {
+      const firstMilestone = milestones[0];
+      const ms = MILESTONES[firstMilestone];
+      if (ms) {
+        bonus += ms.bonus;
+        setMilestonePopup(ms);
+        // Save achievement
+        const achs = getAchievements();
+        if (!achs.has(firstMilestone)) {
+          achs.add(firstMilestone);
+          saveAchievements(achs);
+          setAchievements(achs);
+        }
+      }
+    }
+    
     setScore(prev => prev + bonus + streak * 5);
     setStreak(prev => { const n = prev + 1; if (n > maxStreak) setMaxStreak(n); return n; });
     setWordsLearned(prev => new Set([...prev, w.word]));
     setMapProgress(prev => prev + 1);
+    setCompletedWaypoints(prev => new Set([...prev, currentIdx]));
+    
+    // Reset for next word
+    setStartTime(null);
+    setUsedHints(false);
   };
 
   // Called after fireworks finish
@@ -486,13 +758,27 @@ export default function App() {
   const proceedAfterWin = () => {
     setNewCreature(null);
     if (isBoss) { setIsBoss(false); setShowMap(true); return; }
-    if ((mapProgress) % 5 === 0 && currentIdx < wordQueue.length - 1) { nextWord("hangman", true); return; }
+    // Show map before each boss (at positions 4, 9, 14, 19)
+    const nextIdx = currentIdx + 1;
+    if ([4, 9, 14, 19].includes(nextIdx) && nextIdx < wordQueue.length) {
+      setShowFullMap(true);
+      setTimeout(() => {
+        setShowFullMap(false);
+        nextWord("hangman", true);
+      }, 4000); // Show map for 4 seconds before boss
+      return;
+    }
     nextWord();
   };
 
   const nextWord = (forceType, forceBoss) => {
     if (currentIdx >= wordQueue.length - 1) { setScreen("victory"); return; }
-    setCurrentIdx(p => p + 1); setGameType(forceType || pickGame()); setIsBoss(!!forceBoss); setShowMap(false);
+    setCurrentIdx(p => p + 1); setGameType(forceType || pickGame()); setIsBoss(!!forceBoss);
+    setShowMap(false); setShowFullMap(false);
+    setStartTime(Date.now()); setUsedHints(false);
+    
+    // Track zone start for "sans faute" milestone
+    if ((currentIdx + 1) % 5 === 1) setZoneStartLives(lives);
   };
 
   const handleFail = () => {
@@ -501,7 +787,7 @@ export default function App() {
     setStreak(0); setLives(p => { const n = p - 1; if (n <= 0) setTimeout(() => setScreen("gameover"), 500); return n; });
   };
 
-  const handleSpend = (n) => setScore(p => Math.max(0, p - n));
+  const handleSpend = (n) => { setScore(p => Math.max(0, p - n)); setUsedHints(true); };
   const currentWord = wordQueue[currentIdx];
   const progress = wordQueue.length > 0 ? (currentIdx / wordQueue.length) * 100 : 0;
   const zones = ["Forêt Enchantée", "Rivière Mystique", "Montagne Sacrée", "Temple Ancien", "Grotte Secrète", "Village Oublié", "Pont des Étoiles", "Clairière Dorée"];
@@ -558,6 +844,9 @@ export default function App() {
       {/* SETTINGS */}
       {screen === "settings" && <Settings onBack={() => setScreen("title")} />}
 
+      {/* MILESTONE POPUP */}
+      {milestonePopup && <MilestonePopup milestone={milestonePopup} onClose={() => setMilestonePopup(null)} />}
+
       {/* PLAY */}
       {screen === "play" && currentWord && (
         <div style={{padding:"16px 16px 24px",maxWidth:500,margin:"0 auto",position:"relative"}}>
@@ -568,9 +857,14 @@ export default function App() {
             <div style={{color:"#22c55e",fontWeight:600}}>🔥 {streak}</div>
           </div>
           <div style={{height:8,background:"rgba(0,0,0,0.3)",borderRadius:4,marginBottom:8,overflow:"hidden"}}><div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(90deg,#f59e0b,#22c55e)",borderRadius:4,transition:"width 0.5s ease"}}/></div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
             <span style={{color:"#a3836a",fontSize:"0.75rem"}}>📍 {zones[zoneIdx]} — {currentIdx+1}/{wordQueue.length}</span>
             {nextCreature && <span style={{color:"#a3836a",fontSize:"0.7rem"}}>{nextCreature.emoji} dans {Math.max(0,nextCreature.at-totalWins)}</span>}
+          </div>
+          <div style={{textAlign:"center",marginBottom:16}}>
+            <button onClick={() => setShowFullMap(!showFullMap)} style={{padding:"6px 14px",borderRadius:8,border:"1px solid rgba(251,191,36,0.3)",background:"rgba(251,191,36,0.1)",color:"#fbbf24",fontSize:"0.75rem",fontWeight:600,fontFamily:"'Fredoka',sans-serif",cursor:"pointer"}}>
+              {showFullMap ? "🎮 Retour au jeu" : "🗺️ Voir la carte"}
+            </button>
           </div>
 
           {showMap && (
@@ -583,7 +877,9 @@ export default function App() {
             </div>
           )}
 
-          {!showMap && (
+          {showFullMap ? (
+            <MapView currentWaypoint={currentIdx} completedWaypoints={completedWaypoints} onContinue={() => setShowFullMap(false)} isPreBoss={[4, 9, 14, 19].includes(currentIdx + 1)} />
+          ) : !showMap && (
             <div style={{background:isBoss?"linear-gradient(135deg,rgba(239,68,68,0.2),rgba(120,53,15,0.4))":"linear-gradient(135deg,rgba(120,53,15,0.4),rgba(30,20,10,0.6))",borderRadius:20,padding:"24px 18px",border:isBoss?"1px solid rgba(239,68,68,0.4)":"1px solid rgba(251,191,36,0.2)",animation:isBoss?"bossGlow 2s ease-in-out infinite":"slideUp 0.4s ease-out"}}>
               {gameType==="scramble"&&<ScrambleGame key={currentIdx+"-s"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
               {gameType==="write"&&<WriteGame key={currentIdx+"-w"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
