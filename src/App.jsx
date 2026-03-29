@@ -98,7 +98,7 @@ const MILESTONES = {
   comeback: { name: '💪 Comeback', desc: 'Gagner avec 1 seule vie', bonus: 35, emoji: '💪' },
 };
 
-const EXTRA_LETTERS = "abcdefghijklmnopqrstuvwxyzéèêàâùûôî".split("");
+const EXTRA_LETTERS = [..."abcdefghijklmnopqrstuvwxyzéèêàâùûôî".normalize("NFC")];
 const shuffle = (a) => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
 const speakWord = (t) => { const u=new SpeechSynthesisUtterance(t); u.lang="fr-FR"; u.rate=0.75; speechSynthesis.cancel(); speechSynthesis.speak(u); };
 
@@ -120,14 +120,16 @@ const saveAchievements = (s) => { const d = loadData(); d.achievements = [...s];
 // ─── FIREWORKS ───
 function Fireworks({ onDone }) {
   const canvasRef = useRef(null);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     canvas.width = 400; canvas.height = 300;
+    let cancelled = false;
     const particles = [];
     const colors = ["#fbbf24","#22c55e","#ec4899","#8b5cf6","#ef4444","#3b82f6","#f97316"];
-    // Create bursts
     for (let b = 0; b < 3; b++) {
       const cx = 100 + Math.random() * 200, cy = 60 + Math.random() * 100;
       for (let i = 0; i < 30; i++) {
@@ -138,6 +140,7 @@ function Fireworks({ onDone }) {
     }
     let frame = 0;
     const animate = () => {
+      if (cancelled) return;
       ctx.clearRect(0, 0, 400, 300);
       let alive = false;
       for (const p of particles) {
@@ -152,10 +155,9 @@ function Fireworks({ onDone }) {
       ctx.globalAlpha = 1;
       frame++;
       if (alive) requestAnimationFrame(animate);
-      else onDone?.();
+      else onDoneRef.current?.();
     };
     animate();
-    // Play reward sound
     try {
       const ac = new (window.AudioContext || window.webkitAudioContext)();
       const playNote = (freq, start, dur) => {
@@ -169,7 +171,8 @@ function Fireworks({ onDone }) {
       playNote(523, 0, 0.15); playNote(659, 0.1, 0.15); playNote(784, 0.2, 0.15);
       playNote(1047, 0.3, 0.4);
     } catch {}
-  }, [onDone]);
+    return () => { cancelled = true; };
+  }, []);
   return <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", pointerEvents: "none", zIndex: 50 }} />;
 }
 
@@ -339,7 +342,7 @@ function MapView({ currentWaypoint, completedWaypoints, onContinue, isPreBoss })
       <h3 style={{ color: "#fbbf24", fontFamily: "'Fredoka',sans-serif", fontSize: "clamp(1rem, 4vw, 1.2rem)", textAlign: "center", marginBottom: 12 }}>🗺️ Carte de l'Aventure</h3>
       
       <div style={{ position: "relative", width: "100%", maxWidth: "min(600px, 95vw)", margin: "0 auto", borderRadius: "clamp(8px, 2vw, 12px)", overflow: "hidden", border: "2px solid rgba(251,191,36,0.3)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
-        <img ref={mapRef} src="/adventure-map.png" alt="Carte d'aventure" style={{ width: "100%", height: "auto", display: "block" }} />
+        <img ref={mapRef} src="/adventure-map.png?v=2" alt="Carte d'aventure" style={{ width: "100%", height: "auto", display: "block" }} />
         
         <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 100 40" preserveAspectRatio="none">
           {MAP_WAYPOINTS.map((wp, idx) => {
@@ -441,10 +444,10 @@ function TipBox({ text }) {
 
 // ─── GAME 1: Lettres mélangées ───
 function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
-  const clean = wordObj.game.replace(/\s/g,"");
+  const clean = wordObj.game.normalize("NFC").replace(/\s/g,"");
   const prefix = wordObj.prefix||"";
   const [allLetters] = useState(() => {
-    const real=clean.split(""); const fc=Math.min(4,Math.max(2,Math.floor(clean.length*0.4)));
+    const real=[...clean]; const fc=Math.min(4,Math.max(2,Math.floor(clean.length*0.4)));
     const fakes=[]; for(let i=0;i<fc;i++) fakes.push(EXTRA_LETTERS[Math.floor(Math.random()*EXTRA_LETTERS.length)]);
     return shuffle([...real,...fakes]).map((l,i)=>({letter:l,id:i}));
   });
@@ -501,7 +504,7 @@ function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
       {showTip && boughtTip && <TipBox text={wordObj.tip}/>}
       <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:4,minHeight:48,marginBottom:16,flexWrap:"wrap",marginTop:10}}>
         {prefix && <span style={{color:"#fbbf24",fontSize:"1.2rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",marginRight:4}}>{prefix}</span>}
-        {clean.split("").map((_,i)=>{
+        {[...clean].map((_,i)=>{
           const item=selected[i]; const isErr=errorSlots.has(i);
           return <div key={i} onClick={()=>item&&remove(item,i)} style={{
             width:36,height:42,borderRadius:8,
@@ -591,12 +594,12 @@ function ListenGame({ wordObj, onWin, onFail, score, onSpend }) {
 const HP=[(c)=>{c.beginPath();c.arc(150,55,16,0,Math.PI*2);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,71);c.lineTo(150,120);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,85);c.lineTo(125,105);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,85);c.lineTo(175,105);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,120);c.lineTo(130,150);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,120);c.lineTo(170,150);c.stroke();},(c)=>{c.beginPath();c.moveTo(143,50);c.lineTo(147,54);c.stroke();c.beginPath();c.moveTo(147,50);c.lineTo(143,54);c.stroke();},(c)=>{c.beginPath();c.moveTo(153,50);c.lineTo(157,54);c.stroke();c.beginPath();c.moveTo(157,50);c.lineTo(153,54);c.stroke();c.beginPath();c.arc(150,65,5,0,Math.PI,true);c.stroke();}];
 
 function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss }) {
-  const gw=wordObj.game.toLowerCase(); const prefix=wordObj.prefix||"";
-  const unique=useMemo(()=>new Set(gw.replace(/\s/g,"").split("")),[gw]);
+  const gw=wordObj.game.normalize("NFC").toLowerCase(); const prefix=wordObj.prefix||"";
+  const unique=useMemo(()=>new Set([...gw.replace(/\s/g,"")]),[gw]);
   const [guessed,setGuessed]=useState(new Set()); const [errors,setErrors]=useState(0); const [status,setStatus]=useState(null);
   const [boughtHint,setBoughtHint]=useState(false); const [boughtSound,setBoughtSound]=useState(false); const [boughtTip,setBoughtTip]=useState(false); const [showTip,setShowTip]=useState(false);
   const canvasRef=useRef(null); const maxE=HP.length;
-  const alpha="abcdefghijklmnopqrstuvwxyz".split(""); const acc="éèêëàâùûôîïç".split("");
+  const alpha=[..."abcdefghijklmnopqrstuvwxyz"]; const acc=[..."éèêëàâùûôîïç".normalize("NFC")];
 
   useEffect(()=>{const cv=canvasRef.current;if(!cv)return;const c=cv.getContext("2d");c.clearRect(0,0,300,170);c.strokeStyle="#fbbf24";c.lineWidth=3;c.lineCap="round";c.beginPath();c.moveTo(40,160);c.lineTo(200,160);c.stroke();c.beginPath();c.moveTo(80,160);c.lineTo(80,20);c.stroke();c.beginPath();c.moveTo(80,20);c.lineTo(150,20);c.stroke();c.beginPath();c.moveTo(150,20);c.lineTo(150,39);c.stroke();c.strokeStyle=errors>=maxE-1?"#ef4444":"#f59e0b";for(let i=0;i<errors;i++)HP[i]?.(c);},[errors,maxE]);
 
@@ -620,7 +623,7 @@ function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss }) {
       <canvas ref={canvasRef} width={300} height={170} style={{display:"block",margin:"4px auto 12px",maxWidth:"100%"}}/>
       <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:4,marginBottom:16,flexWrap:"wrap",animation:status==="won"?"tada 0.8s":status==="lost"?"headShake 0.5s":"none"}}>
         {prefix && <span style={{color:"#fbbf24",fontSize:"1.3rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",marginRight:4}}>{prefix}</span>}
-        {gw.split("").map((l,i)=>l===" "?<div key={i} style={{width:12}}/>:<div key={i} style={{width:30,height:38,borderBottom:guessed.has(l)?"none":"3px solid #f59e0b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",color:status==="lost"&&!guessed.has(l)?"#ef4444":"#fff"}}>{guessed.has(l)||status==="lost"?l:""}</div>)}
+        {[...gw].map((l,i)=>l===" "?<div key={i} style={{width:12}}/>:<div key={i} style={{width:30,height:38,borderBottom:guessed.has(l)?"none":"3px solid #f59e0b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",color:status==="lost"&&!guessed.has(l)?"#ef4444":"#fff"}}>{guessed.has(l)||status==="lost"?l:""}</div>)}
       </div>
       {kb(alpha)}<div style={{marginTop:4}}>{kb(acc)}</div>
       {status==="won"&&<p style={{color:"#22c55e",fontFamily:"'Fredoka',sans-serif",marginTop:12,fontSize:"1.1rem"}}>✨ Sauvé ! ✨</p>}
@@ -693,7 +696,6 @@ export default function App() {
   const [maxStreak, setMaxStreak] = useState(0);
   const [wordsLearned, setWordsLearned] = useState(new Set());
   const [showMap, setShowMap] = useState(false);
-  const [mapProgress, setMapProgress] = useState(0);
   const [isBoss, setIsBoss] = useState(false);
   const [showFireworks, setShowFireworks] = useState(false);
   const [newCreature, setNewCreature] = useState(null);
@@ -737,7 +739,7 @@ export default function App() {
     setWordQueue(buildQueue());
     setCurrentIdx(0); setGameType(pickGame()); setScore(0); setLives(5);
     setStreak(0); setMaxStreak(0); setWordsLearned(new Set());
-    setShowMap(false); setMapProgress(0); setIsBoss(false);
+    setShowMap(false); setIsBoss(false);
     setShowFireworks(false); setNewCreature(null);
     setStartTime(Date.now()); setUsedHints(false);
     setMilestonePopup(null);
@@ -805,7 +807,6 @@ export default function App() {
     setScore(prev => prev + bonus + streak * 5);
     setStreak(prev => { const n = prev + 1; if (n > maxStreak) setMaxStreak(n); return n; });
     setWordsLearned(prev => new Set([...prev, w.word]));
-    setMapProgress(prev => prev + 1);
     setSessionPlayedWords(prev => [...prev, w]);
     
     // Reset for next word
@@ -826,19 +827,18 @@ export default function App() {
     if (isBoss) { setIsBoss(false); setBossWord(null); setShowMap(true); return; }
     // Check if boss should trigger (after every 5 normal words: indices 4, 9, 14, 19)
     if ((currentIdx + 1) % 5 === 0 && currentIdx < wordQueue.length) {
-      // Pick a revision word from the 5 words just played in this zone
-      const zoneStart = Math.max(0, currentIdx - 4);
-      const zoneWords = wordQueue.slice(zoneStart, currentIdx + 1);
-      const revisionWord = zoneWords[Math.floor(Math.random() * zoneWords.length)];
+      // Pick a revision word from ALL words seen so far (excluding the one just played)
+      const candidates = wordQueue.slice(0, currentIdx);
+      const revisionWord = candidates.length > 0
+        ? candidates[Math.floor(Math.random() * candidates.length)]
+        : wordQueue[currentIdx];
+      // Set up boss immediately (no timeout) and show map
+      setBossWord(revisionWord);
+      setIsBoss(true);
+      setGameType("hangman");
+      setStartTime(Date.now());
+      setUsedHints(false);
       setShowFullMap(true);
-      setTimeout(() => {
-        setShowFullMap(false);
-        setBossWord(revisionWord);
-        setIsBoss(true);
-        setGameType("hangman");
-        setStartTime(Date.now());
-        setUsedHints(false);
-      }, 4000);
       return;
     }
     nextWord();
@@ -866,8 +866,8 @@ export default function App() {
   const zones = ["Forêt Enchantée", "Rivière Mystique", "Montagne Sacrée", "Temple Ancien", "Grotte Secrète", "Village Oublié", "Pont des Étoiles", "Clairière Dorée"];
   const zoneIdx = Math.floor(currentIdx / 5) % zones.length;
   const nextCreature = CREATURES.find(c => c.at > totalWins);
-  const mapWaypoint = Math.min(mapProgress, MAP_WAYPOINTS.length - 1);
-  const completedWaypoints = useMemo(() => { const s = new Set(); for (let i = 0; i < mapProgress; i++) s.add(i); return s; }, [mapProgress]);
+  const mapWaypoint = Math.min(currentIdx + 1, MAP_WAYPOINTS.length - 1);
+  const completedWaypoints = useMemo(() => { const s = new Set(); for (let i = 0; i <= currentIdx; i++) s.add(i); return s; }, [currentIdx]);
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,#1a0a2e 0%,#16213e 30%,#0f3460 60%,#1a3c34 100%)", fontFamily: "'Fredoka',sans-serif", overflow: "hidden", position: "relative" }}>
@@ -1004,7 +1004,7 @@ export default function App() {
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out",position:"relative"}}>
           <Fireworks onDone={() => {}} />
           <div style={{maxWidth:400,width:"90%",marginBottom:16,borderRadius:16,overflow:"hidden",border:"3px solid #fbbf24",boxShadow:"0 8px 30px rgba(251,191,36,0.4)"}}>
-            <img src="/victory.png" alt="Victoire" style={{width:"100%",height:"auto",display:"block"}} onError={(e) => e.target.style.display = 'none'} />
+            <img src="/victory.png?v=2" alt="Victoire" style={{width:"100%",height:"auto",display:"block"}} onError={(e) => e.target.style.display = 'none'} />
           </div>
           <div style={{fontSize:"4rem",marginBottom:10,animation:"float 2s ease-in-out infinite"}}>🏆</div>
           <h2 style={{color:"#fbbf24",fontSize:"1.8rem",textShadow:"0 2px 15px rgba(251,191,36,0.4)",marginBottom:8}}>Trésor trouvé !</h2>
