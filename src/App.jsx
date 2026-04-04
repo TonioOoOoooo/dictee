@@ -60,11 +60,11 @@ const WORD_PACKS = [
     ],
   },
   {
-    id: "semaine-2026-04-15",
-    label: "Semaine du 15 avril",
-    shortLabel: "15 avril",
+    id: "semaine-2026-04-08",
+    label: "Semaine du 8 avril",
+    shortLabel: "8 avril",
     category: "dictée",
-    order: 20260415,
+    order: 20260408,
     words: [
       { id:"passage", word:"passage", game:"passage", hint:"Un endroit par où on passe.", tip:"Ça commence par PAS, comme dans « passer ». Au milieu, on entend bien deux fois le son [s] : pas-sa-ge." },
       { id:"animal", word:"animal", game:"animal", hint:"Un être vivant comme le chat, le chien ou le poisson.", tip:"Ça commence par ANI. À la fin, on entend « mal », donc ça s’écrit MAL." },
