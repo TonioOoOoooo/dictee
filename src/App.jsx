@@ -1,47 +1,112 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 // ─── WORD DATA ───
-const ALL_WORDS = [
-  { id:"siecle", word:"siècle", game:"siècle", hint:"C’est très, très long : 100 ans.", tip:"Ça commence par le son [s] écrit avec S, pas avec C. On entend « siè » au début, avec un accent grave : è." },
-  { id:"humain", word:"humain", game:"humain", hint:"Une personne, pas un animal.", tip:"Ça commence par HU. Au milieu, on entend « main » comme la main du corps. Pas de E à la fin." },
-  { id:"vers", word:"vers", game:"vers", hint:"Je vais ___ l’école.", tip:"C’est le mot de direction. Il finit par S. Attention à ne pas écrire vert ou ver." },
-  { id:"voguer", word:"voguer", game:"voguer", hint:"Avancer doucement sur l’eau en bateau.", tip:"Ça commence par VO. Pour garder le son [g], il faut mettre U après le G." },
-  { id:"naviguer", word:"naviguer", game:"naviguer", hint:"Conduire un bateau sur la mer.", tip:"On entend [g] avant le son « é ». Pour garder ce son, il faut GU." },
-  { id:"permettre", word:"permettre", game:"permettre", hint:"Dire oui, autoriser.", tip:"On retrouve le mot « mettre » dedans. Comme « mettre », il y a deux T." },
-  { id:"atravers", word:"à travers", game:"travers", hint:"Passer d’un côté à l’autre, par exemple dans une forêt.", prefix:"à ", tip:"D’abord le petit mot « à » avec accent. Ensuite, le deuxième mot finit par S." },
-  { id:"celebre", word:"célèbre", game:"célèbre", hint:"Très connu, comme une grande star.", tip:"Il y a 2 accents. Le premier sonne É, le second sonne È." },
-  { id:"representer", word:"représenter", game:"représenter", hint:"Parler ou agir à la place de quelqu’un.", tip:"Le début ressemble à « re-pré ». On retrouve presque le mot « présent » à l’intérieur." },
-  { id:"pourquoi", word:"pourquoi", game:"pourquoi", hint:"Le mot qu’on dit pour demander la raison.", tip:"C’est comme deux petits mots collés : « pour » puis « quoi »." },
-  { id:"voici", word:"voici", game:"voici", hint:"Mot qu’on dit pour montrer quelque chose près de soi.", tip:"Le début fait penser à « voir ». La fin fait penser à « ici »." },
-  { id:"parceque", word:"parce que", game:"parce que", hint:"C’est le début d’une réponse à « pourquoi ? »", tip:"Ce n’est pas un seul mot. Il faut en écrire 2." },
-  { id:"dehors", word:"dehors", game:"dehors", hint:"Je sors jouer dans le jardin, je vais ___.", tip:"Ça commence par DE. À la fin, on entend « hors », comme quand on est à l’extérieur." },
-  { id:"apres", word:"après", game:"après", hint:"Le contraire de « avant ».", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
-  { id:"parfois", word:"parfois", game:"parfois", hint:"De temps en temps.", tip:"On peut le couper en 2 morceaux : « par » et « fois »." },
-  { id:"hier", word:"hier", game:"hier", hint:"Le jour juste avant aujourd’hui.", tip:"Petit mot de 4 lettres. Il commence par H et ne finit pas par E." },
-  { id:"si", word:"si", game:"si", hint:"Petit mot pour imaginer une condition, par exemple : ___ tu viens…", tip:"C’est un tout petit mot de 2 lettres, avec S puis I." },
-  { id:"deja", word:"déjà", game:"déjà", hint:"Quand quelque chose est fait avant maintenant.", tip:"Petit mot avec 2 accents. Le premier sonne É, le dernier sonne À." },
-  { id:"beaucoup", word:"beaucoup", game:"beaucoup", hint:"Le contraire de « un peu ».", tip:"On entend « beau » au début. Le mot finit par COUP, sans S à la fin." },
-  { id:"geographie", word:"géographie", game:"géographie", hint:"La matière de l’école qui parle des pays, des cartes et de la Terre.", tip:"Le début fait « géo ». Plus loin, le son [f] s’écrit PH." },
-  { id:"louest", word:"l'ouest", game:"ouest", hint:"Le côté où le soleil se couche.", prefix:"l'", tip:"Le mot commence par OU. Il faut penser à « west » en anglais pour la fin." },
-  { id:"fascinant", word:"fascinant", game:"fascinant", hint:"Tellement intéressant qu’on a du mal à regarder ailleurs.", tip:"Au milieu, le son [s] s’écrit SC. Le mot finit par -ant." },
-  { id:"musee", word:"musée", game:"musée", hint:"Un lieu où l’on va voir des tableaux, des statues ou des objets anciens.", tip:"Le mot finit par le son « é », écrit avec É puis un E muet juste après." },
-  { id:"surplomber", word:"surplomber", game:"surplomber", hint:"Être placé plus haut que quelque chose.", tip:"Le mot commence par SUR. On retrouve « plomb » dedans, avec un B qu’on n’entend pas." },
-  { id:"lumiere", word:"lumière", game:"lumière", hint:"Ce qu’allume une lampe dans une pièce sombre.", tip:"Le début est LU. Au milieu, il y a un È avec accent grave." },
-  { id:"plusieurs", word:"plusieurs", game:"plusieurs", hint:"Plus d’un.", tip:"Le mot commence par PLUS. Il faut garder le S de la fin." },
-  { id:"voler", word:"voler", game:"voler", hint:"Ce que font les oiseaux dans le ciel.", tip:"Le début est VOL, comme dans « un vol d’oiseau »." },
-  { id:"ouvert", word:"ouvert", game:"ouvert", hint:"Le contraire de « fermé ».", tip:"Ça commence par OUV. À la fin, on entend presque « air », mais ça s’écrit avec ER puis T." },
-  { id:"fermer", word:"fermer", game:"fermer", hint:"Le contraire de « ouvrir ».", tip:"Le début est FERM, comme dans « fermeture »." },
-  { id:"escalier", word:"escalier", game:"escalier", hint:"Une suite de marches pour monter ou descendre.", tip:"Le début est ESCA. La fin s’écrit -IER." },
-  { id:"enfin", word:"enfin", game:"enfin", hint:"Le mot qu’on dit quand on a trop attendu.", tip:"Le mot commence par EN. À la fin, le son nasal s’écrit IN." },
-  { id:"soleil", word:"soleil", game:"soleil", hint:"Il brille dans le ciel pendant la journée.", tip:"Le début est SOL. La fin s’écrit -EIL, comme dans sommeil." },
-  { id:"chauffer", word:"chauffer", game:"chauffer", hint:"Rendre plus chaud.", tip:"Le début vient de « chaud ». Attention, il y a deux F." },
-  { id:"sommeil", word:"sommeil", game:"sommeil", hint:"Ce qu’on a quand on bâille et qu’on veut dormir.", prefix:"le ", tip:"Il y a deux M. La fin s’écrit -EIL, comme dans soleil." },
-  { id:"bourgeons", word:"bourgeons", game:"bourgeons", hint:"Petites boules sur les branches avant les feuilles.", prefix:"les ", tip:"Au milieu, le son [j] s’écrit GE. À la fin, comme il y en a plusieurs, il faut un S." },
-  { id:"gazouiller", word:"gazouiller", game:"gazouiller", hint:"Faire de petits chants d’oiseaux.", tip:"Le début est GAZOU. À la fin, il faut deux L avant ER." },
-  { id:"ecureuils", word:"écureuils", game:"écureuils", hint:"Petits animaux qui grimpent aux arbres et cachent des noisettes.", prefix:"les ", tip:"Le mot commence par ÉCU. La fin s’écrit -EUILS." },
-  { id:"sautiller", word:"sautiller", game:"sautiller", hint:"Faire plein de petits sauts.", tip:"Le début vient de « saut ». À la fin, il faut deux L avant ER." },
-  { id:"maison", word:"maison", game:"maison", hint:"L’endroit où habite une famille.", tip:"Au début, on entend « mai ». À la fin, le son nasal s’écrit ON." },
+const WORD_PACKS = [
+  {
+    id: "semaine-2026-03-11",
+    label: "Semaine du 11 mars",
+    shortLabel: "11 mars",
+    category: "dictée",
+    order: 20260311,
+    words: [
+      { id:"siecle", word:"siècle", game:"siècle", hint:"C’est très, très long : 100 ans.", tip:"Ça commence par le son [s] écrit avec S, pas avec C. On entend « siè » au début, avec un accent grave : è." },
+      { id:"humain", word:"humain", game:"humain", hint:"Une personne, pas un animal.", tip:"Ça commence par HU. Au milieu, on entend « main » comme la main du corps. Pas de E à la fin." },
+      { id:"vers", word:"vers", game:"vers", hint:"Je vais ___ l’école.", tip:"C’est le mot de direction. Il finit par S. Attention à ne pas écrire vert ou ver." },
+      { id:"voguer", word:"voguer", game:"voguer", hint:"Avancer doucement sur l’eau en bateau.", tip:"Ça commence par VO. Pour garder le son [g], il faut mettre U après le G." },
+      { id:"naviguer", word:"naviguer", game:"naviguer", hint:"Conduire un bateau sur la mer.", tip:"On entend [g] avant le son « é ». Pour garder ce son, il faut GU." },
+      { id:"permettre", word:"permettre", game:"permettre", hint:"Dire oui, autoriser.", tip:"On retrouve le mot « mettre » dedans. Comme « mettre », il y a deux T." },
+      { id:"atravers", word:"à travers", game:"travers", hint:"Passer d’un côté à l’autre, par exemple dans une forêt.", prefix:"à ", tip:"D’abord le petit mot « à » avec accent. Ensuite, le deuxième mot finit par S." },
+      { id:"celebre", word:"célèbre", game:"célèbre", hint:"Très connu, comme une grande star.", tip:"Il y a 2 accents. Le premier sonne É, le second sonne È." },
+      { id:"representer", word:"représenter", game:"représenter", hint:"Parler ou agir à la place de quelqu’un.", tip:"Le début ressemble à « re-pré ». On retrouve presque le mot « présent » à l’intérieur." },
+      { id:"pourquoi", word:"pourquoi", game:"pourquoi", hint:"Le mot qu’on dit pour demander la raison.", tip:"C’est comme deux petits mots collés : « pour » puis « quoi »." },
+      { id:"voici", word:"voici", game:"voici", hint:"Mot qu’on dit pour montrer quelque chose près de soi.", tip:"Le début fait penser à « voir ». La fin fait penser à « ici »." },
+      { id:"parceque", word:"parce que", game:"parce que", hint:"C’est le début d’une réponse à « pourquoi ? »", tip:"Ce n’est pas un seul mot. Il faut en écrire 2." },
+      { id:"dehors", word:"dehors", game:"dehors", hint:"Je sors jouer dans le jardin, je vais ___.", tip:"Ça commence par DE. À la fin, on entend « hors », comme quand on est à l’extérieur." },
+      { id:"apres", word:"après", game:"après", hint:"Le contraire de « avant ».", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
+      { id:"parfois", word:"parfois", game:"parfois", hint:"De temps en temps.", tip:"On peut le couper en 2 morceaux : « par » et « fois »." },
+      { id:"hier", word:"hier", game:"hier", hint:"Le jour juste avant aujourd’hui.", tip:"Petit mot de 4 lettres. Il commence par H et ne finit pas par E." },
+      { id:"si", word:"si", game:"si", hint:"Petit mot pour imaginer une condition, par exemple : ___ tu viens…", tip:"C’est un tout petit mot de 2 lettres, avec S puis I." },
+      { id:"deja", word:"déjà", game:"déjà", hint:"Quand quelque chose est fait avant maintenant.", tip:"Petit mot avec 2 accents. Le premier sonne É, le dernier sonne À." },
+      { id:"beaucoup", word:"beaucoup", game:"beaucoup", hint:"Le contraire de « un peu ».", tip:"On entend « beau » au début. Le mot finit par COUP, sans S à la fin." },
+      { id:"geographie", word:"géographie", game:"géographie", hint:"La matière de l’école qui parle des pays, des cartes et de la Terre.", tip:"Le début fait « géo ». Plus loin, le son [f] s’écrit PH." },
+    ],
+  },
+  {
+    id: "semaine-2026-03-25",
+    label: "Semaine du 25 mars",
+    shortLabel: "25 mars",
+    category: "dictée",
+    order: 20260325,
+    words: [
+      { id:"louest", word:"l’ouest", game:"ouest", hint:"Le côté où le soleil se couche.", prefix:"l’", tip:"Le mot commence par OU. Il faut penser à « west » en anglais pour la fin." },
+      { id:"fascinant", word:"fascinant", game:"fascinant", hint:"Tellement intéressant qu’on a du mal à regarder ailleurs.", tip:"Au milieu, le son [s] s’écrit SC. Le mot finit par -ant." },
+      { id:"musee", word:"musée", game:"musée", hint:"Un lieu où l’on va voir des tableaux, des statues ou des objets anciens.", tip:"Le mot finit par le son « é », écrit avec É puis un E muet juste après." },
+      { id:"surplomber", word:"surplomber", game:"surplomber", hint:"Être placé plus haut que quelque chose.", tip:"Le mot commence par SUR. On retrouve « plomb » dedans, avec un B qu’on n’entend pas." },
+      { id:"lumiere", word:"lumière", game:"lumière", hint:"Ce qu’allume une lampe dans une pièce sombre.", tip:"Le début est LU. Au milieu, il y a un È avec accent grave." },
+      { id:"plusieurs", word:"plusieurs", game:"plusieurs", hint:"Plus d’un.", tip:"Le mot commence par PLUS. Il faut garder le S de la fin." },
+      { id:"voler", word:"voler", game:"voler", hint:"Ce que font les oiseaux dans le ciel.", tip:"Le début est VOL, comme dans « un vol d’oiseau »." },
+      { id:"ouvert", word:"ouvert", game:"ouvert", hint:"Le contraire de « fermé ».", tip:"Ça commence par OUV. À la fin, on entend presque « air », mais ça s’écrit avec ER puis T." },
+      { id:"fermer", word:"fermer", game:"fermer", hint:"Le contraire de « ouvrir ».", tip:"Le début est FERM, comme dans « fermeture »." },
+      { id:"escalier", word:"escalier", game:"escalier", hint:"Une suite de marches pour monter ou descendre.", tip:"Le début est ESCA. La fin s’écrit -IER." },
+      { id:"enfin", word:"enfin", game:"enfin", hint:"Le mot qu’on dit quand on a trop attendu.", tip:"Le mot commence par EN. À la fin, le son nasal s’écrit IN." },
+      { id:"soleil", word:"soleil", game:"soleil", hint:"Il brille dans le ciel pendant la journée.", tip:"Le début est SOL. La fin s’écrit -EIL, comme dans sommeil." },
+      { id:"chauffer", word:"chauffer", game:"chauffer", hint:"Rendre plus chaud.", tip:"Le début vient de « chaud ». Attention, il y a deux F." },
+      { id:"sommeil", word:"sommeil", game:"sommeil", hint:"Ce qu’on a quand on bâille et qu’on veut dormir.", prefix:"le ", tip:"Il y a deux M. La fin s’écrit -EIL, comme dans soleil." },
+      { id:"bourgeons", word:"bourgeons", game:"bourgeons", hint:"Petites boules sur les branches avant les feuilles.", prefix:"les ", tip:"Au milieu, le son [j] s’écrit GE. À la fin, comme il y en a plusieurs, il faut un S." },
+      { id:"gazouiller", word:"gazouiller", game:"gazouiller", hint:"Faire de petits chants d’oiseaux.", tip:"Le début est GAZOU. À la fin, il faut deux L avant ER." },
+      { id:"ecureuils", word:"écureuils", game:"écureuils", hint:"Petits animaux qui grimpent aux arbres et cachent des noisettes.", prefix:"les ", tip:"Le mot commence par ÉCU. La fin s’écrit -EUILS." },
+      { id:"sautiller", word:"sautiller", game:"sautiller", hint:"Faire plein de petits sauts.", tip:"Le début vient de « saut ». À la fin, il faut deux L avant ER." },
+      { id:"maison", word:"maison", game:"maison", hint:"L’endroit où habite une famille.", tip:"Au début, on entend « mai ». À la fin, le son nasal s’écrit ON." },
+    ],
+  },
+  {
+    id: "semaine-2026-04-15",
+    label: "Semaine du 15 avril",
+    shortLabel: "15 avril",
+    category: "dictée",
+    order: 20260415,
+    words: [
+      { id:"passage", word:"passage", game:"passage", hint:"Un endroit par où on passe.", tip:"Ça commence par PAS, comme dans « passer ». Au milieu, on entend bien deux fois le son [s] : pas-sa-ge." },
+      { id:"animal", word:"animal", game:"animal", hint:"Un être vivant comme le chat, le chien ou le poisson.", tip:"Ça commence par ANI. À la fin, on entend « mal », donc ça s’écrit MAL." },
+      { id:"animaux", word:"animaux", game:"animaux", hint:"Plusieurs animaux.", tip:"C’est le pluriel de « animal ». On n’écrit pas -als à la fin, mais -AUX." },
+      { id:"coeur", word:"cœur", game:"coeur", hint:"Il bat dans la poitrine.", tip:"Attention, c’est un mot spécial : on écrit C puis Œ, puis U, puis R. Il n’y a pas de E simple au milieu." },
+      { id:"mer", word:"mer", game:"mer", hint:"Grande étendue d’eau salée.", tip:"Petit mot de 3 lettres. Ça s’écrit M-E-R, comme dans « la mer »." },
+      { id:"ocean", word:"océan", game:"ocean", hint:"Encore plus grand que la mer.", tip:"Ça commence par O. On entend « cé », donc on écrit CÉ avec un accent aigu sur le E." },
+      { id:"decouverte", word:"découverte", game:"decouverte", hint:"Quand on trouve ou apprend quelque chose de nouveau.", tip:"Ça commence par DÉ avec un accent aigu. On retrouve le mot « couvert » dedans, puis E à la fin." },
+      { id:"poisson", word:"poisson", game:"poisson", hint:"Animal qui nage dans l’eau.", tip:"Attention, il y a deux S au milieu : POI-SSON." },
+      { id:"aquarium", word:"aquarium", game:"aquarium", hint:"Grand bac d’eau pour voir ou garder des poissons.", tip:"Ça commence par AQUA, comme dans « aquatique ». À la fin, on écrit RIUM." },
+      { id:"compositeur", word:"compositeur", game:"compositeur", hint:"Personne qui crée de la musique.", tip:"Ça commence par COMPO, comme « composer ». À la fin, on écrit -TEUR." },
+      { id:"plongeon", word:"plongeon", game:"plongeon", hint:"Saut dans l’eau.", tip:"On entend « plon-jon ». Attention, il faut G-E-O-N à la fin pour faire le bon son." },
+      { id:"musique", word:"musique", game:"musique", hint:"Ce qu’on entend dans une chanson ou au piano.", tip:"Ça commence par MU. À la fin, on écrit -IQUE." },
+      { id:"baleine", word:"baleine", game:"baleine", hint:"Très grand animal de la mer.", tip:"On entend « ba-lène ». Attention, ça s’écrit BALEINE avec EI." },
+      { id:"dauphin", word:"dauphin", game:"dauphin", hint:"Animal marin très intelligent.", tip:"Le début DAU s’écrit avec AU. À la fin, le son [fin] s’écrit PHIN, pas FIN." },
+      { id:"sardine", word:"sardine", game:"sardine", hint:"Petit poisson argenté.", tip:"Ça commence par SAR. À la fin, on écrit DINE." },
+      { id:"fond", word:"fond", game:"fond", hint:"Le bas de la mer ou d’un objet creux.", tip:"Attention, ça finit par D, même si on l’entend peu : F-O-N-D." },
+      { id:"eau", word:"eau", game:"eau", hint:"Ce qu’on boit, ou ce qu’il y a dans la mer.", tip:"Petit mot spécial : le son [o] s’écrit E-A-U." },
+      { id:"magie", word:"magie", game:"magie", hint:"Ce qui semble merveilleux, comme un tour magique.", tip:"Ça commence par MA. À la fin, le son [ji] s’écrit G-I-E." },
+      { id:"note", word:"note", game:"note", hint:"Petit signe de musique, ou son de musique.", tip:"Mot court : N-O-T-E. Ne pas oublier le E final." },
+      { id:"ecaille", word:"écaille", game:"ecaille", hint:"Petite plaque brillante sur le corps d’un poisson.", tip:"Ça commence par É avec un accent aigu. Le son [caille] s’écrit C-A-I-L-L-E." },
+      { id:"nageoire", word:"nageoire", game:"nageoire", hint:"Partie du corps du poisson qui l’aide à nager.", tip:"Ça commence par NAGE. À la fin, on écrit OIRE." },
+      { id:"piano", word:"piano", game:"piano", hint:"Instrument de musique avec des touches.", tip:"Ça s’écrit P-I-A-N-O. On entend bien « pia-no »." },
+      { id:"se_nommer", word:"se nommer", game:"se nommer", hint:"Dire comment on s’appelle.", tip:"Il y a deux mots. « se » puis « nommer ». Attention, « nommer » prend deux M." },
+      { id:"faire", word:"faire", game:"faire", hint:"Réaliser quelque chose.", tip:"Mot très courant. Il s’écrit F-A-I-R-E." },
+      { id:"nager", word:"nager", game:"nager", hint:"Avancer dans l’eau.", tip:"Ça commence par NA. Le son [jé] à la fin s’écrit G-E-R." },
+      { id:"voyager", word:"voyager", game:"voyager", hint:"Aller dans d’autres endroits, faire un voyage.", tip:"On retrouve le mot « voyage ». À la fin, on écrit -GER." },
+      { id:"imaginer", word:"imaginer", game:"imaginer", hint:"Créer quelque chose dans sa tête.", tip:"Ça commence par I-M-A. Le son [j] au milieu s’écrit G, et ça finit par -ER." },
+      { id:"imaginaire", word:"imaginaire", game:"imaginaire", hint:"Qui existe dans l’imagination, pas pour de vrai.", tip:"On retrouve « imaginer ». À la fin, on écrit -AIRE." },
+      { id:"aquatique", word:"aquatique", game:"aquatique", hint:"Qui est lié à l’eau.", tip:"Ça commence par AQUA. À la fin, on écrit -TIQUE." },
+      { id:"brillant", word:"brillant", game:"brillant", hint:"Qui brille, qui renvoie la lumière.", tip:"Attention, il y a deux L : BRI-LLANT." },
+      { id:"multicolore", word:"multicolore", game:"multicolore", hint:"Qui a plusieurs couleurs.", tip:"On entend « multi » puis « colore ». C’est un mot long, à écrire en un seul mot." },
+      { id:"petit", word:"petit", game:"petit", hint:"Pas grand.", tip:"Ça s’écrit P-E-T-I-T. Il y a un T à la fin." },
+      { id:"gros", word:"gros", game:"gros", hint:"Le contraire de petit.", tip:"Ça s’écrit G-R-O-S. Ne pas oublier le S final." },
+      { id:"avec", word:"avec", game:"avec", hint:"Je viens ___ toi.", tip:"Petit mot très courant. Il s’écrit A-V-E-C." },
+      { id:"dans", word:"dans", game:"dans", hint:"Le poisson nage ___ l’eau.", tip:"Petit mot de 4 lettres. Il finit par S." },
+      { id:"comme", word:"comme", game:"comme", hint:"Il nage ___ un dauphin.", tip:"Attention, il y a deux M : COMME." },
+    ],
+  },
 ];
+
+const ALL_WORDS = WORD_PACKS.flatMap(pack => pack.words);
 
 // ─── CREATURES to unlock ───
 const CREATURES = [
@@ -116,6 +181,15 @@ const getTotalWins = () => { const d = loadData(); return d.totalWins || 0; };
 const saveTotalWins = (n) => { const d = loadData(); d.totalWins = n; saveData(d); };
 const getAchievements = () => { const d = loadData(); return new Set(d.achievements || []); };
 const saveAchievements = (s) => { const d = loadData(); d.achievements = [...s]; saveData(d); };
+
+// ─── SELECTION HELPER ───
+const getWordsForSelection = (mode, packId) => {
+  if (mode === "dictation" && packId) {
+    const pack = WORD_PACKS.find(p => p.id === packId);
+    return pack ? pack.words : ALL_WORDS;
+  }
+  return ALL_WORDS;
+};
 
 // ─── FIREWORKS ───
 function Fireworks({ onDone }) {
@@ -711,6 +785,9 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(true);
   const [bossWord, setBossWord] = useState(null);
   const [sessionPlayedWords, setSessionPlayedWords] = useState([]);
+  const [selectedMode, setSelectedMode] = useState("all");
+  const [selectedPackId, setSelectedPackId] = useState(null);
+  const [packEmptyWarning, setPackEmptyWarning] = useState(false);
 
   // Cheat: + adds life
   useEffect(() => {
@@ -720,11 +797,11 @@ export default function App() {
 
   const pickGame = () => NORMAL_GAMES[Math.floor(Math.random() * NORMAL_GAMES.length)];
 
-  const buildQueue = () => {
+  const buildQueue = (words) => {
     const disabled = getDisabled();
     const stats = getWordStats();
-    let pool = ALL_WORDS.filter(w => !disabled.has(w.id));
-    if (pool.length === 0) pool = [...ALL_WORDS];
+    let pool = words.filter(w => !disabled.has(w.id));
+    if (pool.length === 0) return [];
     // Prioritize least-mastered words
     pool.sort((a, b) => {
       const sa = stats[a.id]?.wins || 0, sb = stats[b.id]?.wins || 0;
@@ -736,7 +813,14 @@ export default function App() {
   };
 
   const startGame = () => {
-    setWordQueue(buildQueue());
+    const words = getWordsForSelection(selectedMode, selectedPackId);
+    const queue = buildQueue(words);
+    if (queue.length === 0) {
+      setPackEmptyWarning(true);
+      return;
+    }
+    setPackEmptyWarning(false);
+    setWordQueue(queue);
     setCurrentIdx(0); setGameType(pickGame()); setScore(0); setLives(5);
     setStreak(0); setMaxStreak(0); setWordsLearned(new Set());
     setShowMap(false); setIsBoss(false);
@@ -925,7 +1009,41 @@ export default function App() {
           <h1 style={{color:"#fbbf24",fontSize:"clamp(1.6rem,6vw,2.4rem)",textAlign:"center",textShadow:"0 2px 20px rgba(251,191,36,0.4)",marginBottom:4,lineHeight:1.2}}>L'Aventure des Mots</h1>
           <p style={{color:"#d4a574",marginBottom:4,fontSize:"1rem"}}>de Léo l'Explorateur</p>
           {nextCreature && <p style={{color:"#a3836a",fontSize:"0.8rem",marginBottom:4}}>Prochaine créature : {nextCreature.emoji} dans {nextCreature.at - totalWins} mot{nextCreature.at-totalWins>1?"s":""}</p>}
-          <p style={{color:"#6b5c4d",fontSize:"0.75rem",marginBottom:24}}>{totalWins} mots maîtrisés au total • {getUnlocked().size}/{CREATURES.length} créatures</p>
+          <p style={{color:"#6b5c4d",fontSize:"0.75rem",marginBottom:16}}>{totalWins} mots maîtrisés au total • {getUnlocked().size}/{CREATURES.length} créatures</p>
+
+          {/* ── Sélecteur de dictée ── */}
+          <div style={{width:"90%",maxWidth:380,marginBottom:16}}>
+            <p style={{color:"#d4a574",fontSize:"0.8rem",marginBottom:8,textAlign:"center",fontWeight:600}}>📖 Choisir une dictée :</p>
+            {/* Toutes les dictées */}
+            <button
+              onClick={()=>{setSelectedMode("all");setSelectedPackId(null);setPackEmptyWarning(false);}}
+              style={{width:"100%",padding:"10px 14px",borderRadius:12,border:selectedMode==="all"?"2px solid #fbbf24":"1px solid rgba(251,191,36,0.3)",background:selectedMode==="all"?"rgba(251,191,36,0.15)":"transparent",color:selectedMode==="all"?"#fbbf24":"#d4a574",fontSize:"0.9rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center",transition:"all 0.15s"}}
+            >
+              <span>📚 Toutes les dictées</span>
+              <span style={{color:"#a3836a",fontSize:"0.75rem",fontWeight:400}}>{ALL_WORDS.length} mots</span>
+            </button>
+            {/* Liste des packs, du plus récent au plus ancien */}
+            {[...WORD_PACKS].sort((a,b)=>b.order-a.order).map(pack=>{
+              const isSelected = selectedMode==="dictation" && selectedPackId===pack.id;
+              return (
+                <button key={pack.id}
+                  onClick={()=>{setSelectedMode("dictation");setSelectedPackId(pack.id);setPackEmptyWarning(false);}}
+                  style={{width:"100%",padding:"10px 14px",borderRadius:12,border:isSelected?"2px solid #fbbf24":"1px solid rgba(251,191,36,0.2)",background:isSelected?"rgba(251,191,36,0.15)":"rgba(0,0,0,0.15)",color:isSelected?"#fbbf24":"#d4a574",fontSize:"0.9rem",fontWeight:isSelected?700:500,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",marginBottom:5,display:"flex",justifyContent:"space-between",alignItems:"center",transition:"all 0.15s"}}
+                >
+                  <span>{isSelected?"▶ ":""}{pack.label}</span>
+                  <span style={{color:"#a3836a",fontSize:"0.75rem",fontWeight:400}}>{pack.words.length} mots</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Avertissement dictée vide */}
+          {packEmptyWarning && (
+            <div style={{width:"90%",maxWidth:380,marginBottom:12,padding:"10px 14px",borderRadius:10,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",textAlign:"center"}}>
+              <p style={{color:"#fca5a5",fontSize:"0.85rem",margin:0}}>⚠️ Tous les mots de cette dictée sont désactivés.<br/>Active des mots dans ⚙️ Mes mots, ou choisis une autre dictée.</p>
+            </div>
+          )}
+
           <button onClick={startGame} style={{padding:"16px 32px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.3rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 5px 0 #92400e,0 8px 30px rgba(245,158,11,0.3)",animation:"pulse 2s ease-in-out infinite"}}
             onMouseDown={e=>e.currentTarget.style.transform="translateY(3px)"} onMouseUp={e=>e.currentTarget.style.transform="translateY(0)"}
           >🗺️ Partir à l'aventure !</button>
