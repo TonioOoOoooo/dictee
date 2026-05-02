@@ -825,11 +825,6 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(true);
   const [bossWord, setBossWord] = useState(null);
   const [sessionPlayedWords, setSessionPlayedWords] = useState([]);
-<<<<<<< HEAD
-  const [selectedMode, setSelectedMode] = useState("all");
-  const [selectedPackId, setSelectedPackId] = useState(null);
-  const [packEmptyWarning, setPackEmptyWarning] = useState(false);
-=======
   const [selectedDictee, setSelectedDictee] = useState(getSelectedDictee());
   // Mastery & dictée tracking
   const [mastered, setMastered] = useState(getMastered());
@@ -843,7 +838,6 @@ export default function App() {
   // Language mode (fr / en) for the whole app
   const [lang, setLang] = useState(getLang());
   const voiceLang = lang === "en" ? "en-US" : "fr-FR";
->>>>>>> 5a324b0 (go)
 
   // Cheat: + adds life
   useEffect(() => {
@@ -851,20 +845,6 @@ export default function App() {
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, []);
 
-<<<<<<< HEAD
-  const pickGame = () => NORMAL_GAMES[Math.floor(Math.random() * NORMAL_GAMES.length)];
-
-  const buildQueue = (words) => {
-    const disabled = getDisabled();
-    const stats = getWordStats();
-    let pool = words.filter(w => !disabled.has(w.id));
-    if (pool.length === 0) return [];
-    // Prioritize least-mastered words
-    pool.sort((a, b) => {
-      const sa = stats[a.id]?.wins || 0, sb = stats[b.id]?.wins || 0;
-      if (sa !== sb) return sa - sb;
-      return Math.random() - 0.5;
-=======
   // ── Detect dictée perfection on entering the victory screen
   useEffect(() => {
     if (screen !== "victory") return;
@@ -878,7 +858,6 @@ export default function App() {
     // Mark as perfect, persist, trigger celebration
     setDicteePerfect(prev => {
       const next = new Set(prev); next.add(selectedDictee); saveDicteePerfect(next); return next;
->>>>>>> 5a324b0 (go)
     });
     setJustPerfectedDictee(selectedDictee);
   }, [screen, selectedDictee, mastered, dicteePerfect]);
@@ -894,16 +873,6 @@ export default function App() {
     return { total, done, isPerfect: total > 0 && done === total };
   };
 
-<<<<<<< HEAD
-  const startGame = () => {
-    const words = getWordsForSelection(selectedMode, selectedPackId);
-    const queue = buildQueue(words);
-    if (queue.length === 0) {
-      setPackEmptyWarning(true);
-      return;
-    }
-    setPackEmptyWarning(false);
-=======
   const pickGame = () => NORMAL_GAMES[Math.floor(Math.random() * NORMAL_GAMES.length)];
 
   const buildQueue = (overrides = {}) => {
@@ -935,7 +904,6 @@ export default function App() {
 
   const startGameWith = (queue) => {
     if (!queue.length) return;
->>>>>>> 5a324b0 (go)
     setWordQueue(queue);
     setCurrentIdx(0); setGameType(pickGame()); setScore(0); setLives(5);
     setStreak(0); setMaxStreak(0); setWordsLearned(new Set());
@@ -1205,32 +1173,6 @@ export default function App() {
           <h1 style={{color:"#fbbf24",fontSize:"clamp(1.6rem,6vw,2.4rem)",textAlign:"center",textShadow:"0 2px 20px rgba(251,191,36,0.4)",marginBottom:4,lineHeight:1.2}}>L'Aventure des Mots</h1>
           <p style={{color:"#d4a574",marginBottom:4,fontSize:"1rem"}}>de Léo l'Explorateur</p>
           {nextCreature && <p style={{color:"#a3836a",fontSize:"0.8rem",marginBottom:4}}>Prochaine créature : {nextCreature.emoji} dans {nextCreature.at - totalWins} mot{nextCreature.at-totalWins>1?"s":""}</p>}
-<<<<<<< HEAD
-          <p style={{color:"#6b5c4d",fontSize:"0.75rem",marginBottom:16}}>{totalWins} mots maîtrisés au total • {getUnlocked().size}/{CREATURES.length} créatures</p>
-
-          {/* ── Sélecteur de dictée ── */}
-          <div style={{width:"90%",maxWidth:380,marginBottom:16}}>
-            <p style={{color:"#d4a574",fontSize:"0.8rem",marginBottom:8,textAlign:"center",fontWeight:600}}>📖 Choisir une dictée :</p>
-            {/* Toutes les dictées */}
-            <button
-              onClick={()=>{setSelectedMode("all");setSelectedPackId(null);setPackEmptyWarning(false);}}
-              style={{width:"100%",padding:"10px 14px",borderRadius:12,border:selectedMode==="all"?"2px solid #fbbf24":"1px solid rgba(251,191,36,0.3)",background:selectedMode==="all"?"rgba(251,191,36,0.15)":"transparent",color:selectedMode==="all"?"#fbbf24":"#d4a574",fontSize:"0.9rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center",transition:"all 0.15s"}}
-            >
-              <span>📚 Toutes les dictées</span>
-              <span style={{color:"#a3836a",fontSize:"0.75rem",fontWeight:400}}>{ALL_WORDS.length} mots</span>
-            </button>
-            {/* Liste des packs, du plus récent au plus ancien */}
-            {[...WORD_PACKS].sort((a,b)=>b.order-a.order).map(pack=>{
-              const isSelected = selectedMode==="dictation" && selectedPackId===pack.id;
-              return (
-                <button key={pack.id}
-                  onClick={()=>{setSelectedMode("dictation");setSelectedPackId(pack.id);setPackEmptyWarning(false);}}
-                  style={{width:"100%",padding:"10px 14px",borderRadius:12,border:isSelected?"2px solid #fbbf24":"1px solid rgba(251,191,36,0.2)",background:isSelected?"rgba(251,191,36,0.15)":"rgba(0,0,0,0.15)",color:isSelected?"#fbbf24":"#d4a574",fontSize:"0.9rem",fontWeight:isSelected?700:500,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",marginBottom:5,display:"flex",justifyContent:"space-between",alignItems:"center",transition:"all 0.15s"}}
-                >
-                  <span>{isSelected?"▶ ":""}{pack.label}</span>
-                  <span style={{color:"#a3836a",fontSize:"0.75rem",fontWeight:400}}>{pack.words.length} mots</span>
-                </button>
-=======
           <p style={{color:"#6b5c4d",fontSize:"0.75rem",marginBottom:20}}>{totalWins} mots maîtrisés au total • {getUnlocked().size}/{CREATURES.length} créatures</p>
 
           <div style={{width:"100%",maxWidth:440,marginBottom:18}}>
@@ -1307,21 +1249,10 @@ export default function App() {
                     </button>
                   )}
                 </div>
->>>>>>> 5a324b0 (go)
               );
             })}
           </div>
 
-<<<<<<< HEAD
-          {/* Avertissement dictée vide */}
-          {packEmptyWarning && (
-            <div style={{width:"90%",maxWidth:380,marginBottom:12,padding:"10px 14px",borderRadius:10,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",textAlign:"center"}}>
-              <p style={{color:"#fca5a5",fontSize:"0.85rem",margin:0}}>⚠️ Tous les mots de cette dictée sont désactivés.<br/>Active des mots dans ⚙️ Mes mots, ou choisis une autre dictée.</p>
-            </div>
-          )}
-
-=======
->>>>>>> 5a324b0 (go)
           <button onClick={startGame} style={{padding:"16px 32px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.3rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 5px 0 #92400e,0 8px 30px rgba(245,158,11,0.3)",animation:"pulse 2s ease-in-out infinite"}}
             onMouseDown={e=>e.currentTarget.style.transform="translateY(3px)"} onMouseUp={e=>e.currentTarget.style.transform="translateY(0)"}
           >🗺️ Partir à l'aventure !</button>
