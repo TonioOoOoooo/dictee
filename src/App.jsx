@@ -1,112 +1,138 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 // ─── WORD DATA ───
-const WORD_PACKS = [
-  {
-    id: "semaine-2026-03-11",
-    label: "Semaine du 11 mars",
-    shortLabel: "11 mars",
-    category: "dictée",
-    order: 20260311,
-    words: [
-      { id:"siecle", word:"siècle", game:"siècle", hint:"C’est très, très long : 100 ans.", tip:"Ça commence par le son [s] écrit avec S, pas avec C. On entend « siè » au début, avec un accent grave : è." },
-      { id:"humain", word:"humain", game:"humain", hint:"Une personne, pas un animal.", tip:"Ça commence par HU. Au milieu, on entend « main » comme la main du corps. Pas de E à la fin." },
-      { id:"vers", word:"vers", game:"vers", hint:"Je vais ___ l’école.", tip:"C’est le mot de direction. Il finit par S. Attention à ne pas écrire vert ou ver." },
-      { id:"voguer", word:"voguer", game:"voguer", hint:"Avancer doucement sur l’eau en bateau.", tip:"Ça commence par VO. Pour garder le son [g], il faut mettre U après le G." },
-      { id:"naviguer", word:"naviguer", game:"naviguer", hint:"Conduire un bateau sur la mer.", tip:"On entend [g] avant le son « é ». Pour garder ce son, il faut GU." },
-      { id:"permettre", word:"permettre", game:"permettre", hint:"Dire oui, autoriser.", tip:"On retrouve le mot « mettre » dedans. Comme « mettre », il y a deux T." },
-      { id:"atravers", word:"à travers", game:"travers", hint:"Passer d’un côté à l’autre, par exemple dans une forêt.", prefix:"à ", tip:"D’abord le petit mot « à » avec accent. Ensuite, le deuxième mot finit par S." },
-      { id:"celebre", word:"célèbre", game:"célèbre", hint:"Très connu, comme une grande star.", tip:"Il y a 2 accents. Le premier sonne É, le second sonne È." },
-      { id:"representer", word:"représenter", game:"représenter", hint:"Parler ou agir à la place de quelqu’un.", tip:"Le début ressemble à « re-pré ». On retrouve presque le mot « présent » à l’intérieur." },
-      { id:"pourquoi", word:"pourquoi", game:"pourquoi", hint:"Le mot qu’on dit pour demander la raison.", tip:"C’est comme deux petits mots collés : « pour » puis « quoi »." },
-      { id:"voici", word:"voici", game:"voici", hint:"Mot qu’on dit pour montrer quelque chose près de soi.", tip:"Le début fait penser à « voir ». La fin fait penser à « ici »." },
-      { id:"parceque", word:"parce que", game:"parce que", hint:"C’est le début d’une réponse à « pourquoi ? »", tip:"Ce n’est pas un seul mot. Il faut en écrire 2." },
-      { id:"dehors", word:"dehors", game:"dehors", hint:"Je sors jouer dans le jardin, je vais ___.", tip:"Ça commence par DE. À la fin, on entend « hors », comme quand on est à l’extérieur." },
-      { id:"apres", word:"après", game:"après", hint:"Le contraire de « avant ».", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
-      { id:"parfois", word:"parfois", game:"parfois", hint:"De temps en temps.", tip:"On peut le couper en 2 morceaux : « par » et « fois »." },
-      { id:"hier", word:"hier", game:"hier", hint:"Le jour juste avant aujourd’hui.", tip:"Petit mot de 4 lettres. Il commence par H et ne finit pas par E." },
-      { id:"si", word:"si", game:"si", hint:"Petit mot pour imaginer une condition, par exemple : ___ tu viens…", tip:"C’est un tout petit mot de 2 lettres, avec S puis I." },
-      { id:"deja", word:"déjà", game:"déjà", hint:"Quand quelque chose est fait avant maintenant.", tip:"Petit mot avec 2 accents. Le premier sonne É, le dernier sonne À." },
-      { id:"beaucoup", word:"beaucoup", game:"beaucoup", hint:"Le contraire de « un peu ».", tip:"On entend « beau » au début. Le mot finit par COUP, sans S à la fin." },
-      { id:"geographie", word:"géographie", game:"géographie", hint:"La matière de l’école qui parle des pays, des cartes et de la Terre.", tip:"Le début fait « géo ». Plus loin, le son [f] s’écrit PH." },
-    ],
-  },
-  {
-    id: "semaine-2026-03-25",
-    label: "Semaine du 25 mars",
-    shortLabel: "25 mars",
-    category: "dictée",
-    order: 20260325,
-    words: [
-      { id:"louest", word:"l’ouest", game:"ouest", hint:"Le côté où le soleil se couche.", prefix:"l’", tip:"Le mot commence par OU. Il faut penser à « west » en anglais pour la fin." },
-      { id:"fascinant", word:"fascinant", game:"fascinant", hint:"Tellement intéressant qu’on a du mal à regarder ailleurs.", tip:"Au milieu, le son [s] s’écrit SC. Le mot finit par -ant." },
-      { id:"musee", word:"musée", game:"musée", hint:"Un lieu où l’on va voir des tableaux, des statues ou des objets anciens.", tip:"Le mot finit par le son « é », écrit avec É puis un E muet juste après." },
-      { id:"surplomber", word:"surplomber", game:"surplomber", hint:"Être placé plus haut que quelque chose.", tip:"Le mot commence par SUR. On retrouve « plomb » dedans, avec un B qu’on n’entend pas." },
-      { id:"lumiere", word:"lumière", game:"lumière", hint:"Ce qu’allume une lampe dans une pièce sombre.", tip:"Le début est LU. Au milieu, il y a un È avec accent grave." },
-      { id:"plusieurs", word:"plusieurs", game:"plusieurs", hint:"Plus d’un.", tip:"Le mot commence par PLUS. Il faut garder le S de la fin." },
-      { id:"voler", word:"voler", game:"voler", hint:"Ce que font les oiseaux dans le ciel.", tip:"Le début est VOL, comme dans « un vol d’oiseau »." },
-      { id:"ouvert", word:"ouvert", game:"ouvert", hint:"Le contraire de « fermé ».", tip:"Ça commence par OUV. À la fin, on entend presque « air », mais ça s’écrit avec ER puis T." },
-      { id:"fermer", word:"fermer", game:"fermer", hint:"Le contraire de « ouvrir ».", tip:"Le début est FERM, comme dans « fermeture »." },
-      { id:"escalier", word:"escalier", game:"escalier", hint:"Une suite de marches pour monter ou descendre.", tip:"Le début est ESCA. La fin s’écrit -IER." },
-      { id:"enfin", word:"enfin", game:"enfin", hint:"Le mot qu’on dit quand on a trop attendu.", tip:"Le mot commence par EN. À la fin, le son nasal s’écrit IN." },
-      { id:"soleil", word:"soleil", game:"soleil", hint:"Il brille dans le ciel pendant la journée.", tip:"Le début est SOL. La fin s’écrit -EIL, comme dans sommeil." },
-      { id:"chauffer", word:"chauffer", game:"chauffer", hint:"Rendre plus chaud.", tip:"Le début vient de « chaud ». Attention, il y a deux F." },
-      { id:"sommeil", word:"sommeil", game:"sommeil", hint:"Ce qu’on a quand on bâille et qu’on veut dormir.", prefix:"le ", tip:"Il y a deux M. La fin s’écrit -EIL, comme dans soleil." },
-      { id:"bourgeons", word:"bourgeons", game:"bourgeons", hint:"Petites boules sur les branches avant les feuilles.", prefix:"les ", tip:"Au milieu, le son [j] s’écrit GE. À la fin, comme il y en a plusieurs, il faut un S." },
-      { id:"gazouiller", word:"gazouiller", game:"gazouiller", hint:"Faire de petits chants d’oiseaux.", tip:"Le début est GAZOU. À la fin, il faut deux L avant ER." },
-      { id:"ecureuils", word:"écureuils", game:"écureuils", hint:"Petits animaux qui grimpent aux arbres et cachent des noisettes.", prefix:"les ", tip:"Le mot commence par ÉCU. La fin s’écrit -EUILS." },
-      { id:"sautiller", word:"sautiller", game:"sautiller", hint:"Faire plein de petits sauts.", tip:"Le début vient de « saut ». À la fin, il faut deux L avant ER." },
-      { id:"maison", word:"maison", game:"maison", hint:"L’endroit où habite une famille.", tip:"Au début, on entend « mai ». À la fin, le son nasal s’écrit ON." },
-    ],
-  },
-  {
-    id: "semaine-2026-04-08",
-    label: "Semaine du 8 avril",
-    shortLabel: "8 avril",
-    category: "dictée",
-    order: 20260408,
-    words: [
-      { id:"passage", word:"passage", game:"passage", hint:"Un endroit par où on passe.", tip:"Ça commence par PAS, comme dans « passer ». Au milieu, on entend bien deux fois le son [s] : pas-sa-ge." },
-      { id:"animal", word:"animal", game:"animal", hint:"Un être vivant comme le chat, le chien ou le poisson.", tip:"Ça commence par ANI. À la fin, on entend « mal », donc ça s’écrit MAL." },
-      { id:"animaux", word:"animaux", game:"animaux", hint:"Plusieurs animaux.", tip:"C’est le pluriel de « animal ». On n’écrit pas -als à la fin, mais -AUX." },
-      { id:"coeur", word:"cœur", game:"coeur", hint:"Il bat dans la poitrine.", tip:"Attention, c’est un mot spécial : on écrit C puis Œ, puis U, puis R. Il n’y a pas de E simple au milieu." },
-      { id:"mer", word:"mer", game:"mer", hint:"Grande étendue d’eau salée.", tip:"Petit mot de 3 lettres. Ça s’écrit M-E-R, comme dans « la mer »." },
-      { id:"ocean", word:"océan", game:"ocean", hint:"Encore plus grand que la mer.", tip:"Ça commence par O. On entend « cé », donc on écrit CÉ avec un accent aigu sur le E." },
-      { id:"decouverte", word:"découverte", game:"decouverte", hint:"Quand on trouve ou apprend quelque chose de nouveau.", tip:"Ça commence par DÉ avec un accent aigu. On retrouve le mot « couvert » dedans, puis E à la fin." },
-      { id:"poisson", word:"poisson", game:"poisson", hint:"Animal qui nage dans l’eau.", tip:"Attention, il y a deux S au milieu : POI-SSON." },
-      { id:"aquarium", word:"aquarium", game:"aquarium", hint:"Grand bac d’eau pour voir ou garder des poissons.", tip:"Ça commence par AQUA, comme dans « aquatique ». À la fin, on écrit RIUM." },
-      { id:"compositeur", word:"compositeur", game:"compositeur", hint:"Personne qui crée de la musique.", tip:"Ça commence par COMPO, comme « composer ». À la fin, on écrit -TEUR." },
-      { id:"plongeon", word:"plongeon", game:"plongeon", hint:"Saut dans l’eau.", tip:"On entend « plon-jon ». Attention, il faut G-E-O-N à la fin pour faire le bon son." },
-      { id:"musique", word:"musique", game:"musique", hint:"Ce qu’on entend dans une chanson ou au piano.", tip:"Ça commence par MU. À la fin, on écrit -IQUE." },
-      { id:"baleine", word:"baleine", game:"baleine", hint:"Très grand animal de la mer.", tip:"On entend « ba-lène ». Attention, ça s’écrit BALEINE avec EI." },
-      { id:"dauphin", word:"dauphin", game:"dauphin", hint:"Animal marin très intelligent.", tip:"Le début DAU s’écrit avec AU. À la fin, le son [fin] s’écrit PHIN, pas FIN." },
-      { id:"sardine", word:"sardine", game:"sardine", hint:"Petit poisson argenté.", tip:"Ça commence par SAR. À la fin, on écrit DINE." },
-      { id:"fond", word:"fond", game:"fond", hint:"Le bas de la mer ou d’un objet creux.", tip:"Attention, ça finit par D, même si on l’entend peu : F-O-N-D." },
-      { id:"eau", word:"eau", game:"eau", hint:"Ce qu’on boit, ou ce qu’il y a dans la mer.", tip:"Petit mot spécial : le son [o] s’écrit E-A-U." },
-      { id:"magie", word:"magie", game:"magie", hint:"Ce qui semble merveilleux, comme un tour magique.", tip:"Ça commence par MA. À la fin, le son [ji] s’écrit G-I-E." },
-      { id:"note", word:"note", game:"note", hint:"Petit signe de musique, ou son de musique.", tip:"Mot court : N-O-T-E. Ne pas oublier le E final." },
-      { id:"ecaille", word:"écaille", game:"ecaille", hint:"Petite plaque brillante sur le corps d’un poisson.", tip:"Ça commence par É avec un accent aigu. Le son [caille] s’écrit C-A-I-L-L-E." },
-      { id:"nageoire", word:"nageoire", game:"nageoire", hint:"Partie du corps du poisson qui l’aide à nager.", tip:"Ça commence par NAGE. À la fin, on écrit OIRE." },
-      { id:"piano", word:"piano", game:"piano", hint:"Instrument de musique avec des touches.", tip:"Ça s’écrit P-I-A-N-O. On entend bien « pia-no »." },
-      { id:"se_nommer", word:"se nommer", game:"se nommer", hint:"Dire comment on s’appelle.", tip:"Il y a deux mots. « se » puis « nommer ». Attention, « nommer » prend deux M." },
-      { id:"faire", word:"faire", game:"faire", hint:"Réaliser quelque chose.", tip:"Mot très courant. Il s’écrit F-A-I-R-E." },
-      { id:"nager", word:"nager", game:"nager", hint:"Avancer dans l’eau.", tip:"Ça commence par NA. Le son [jé] à la fin s’écrit G-E-R." },
-      { id:"voyager", word:"voyager", game:"voyager", hint:"Aller dans d’autres endroits, faire un voyage.", tip:"On retrouve le mot « voyage ». À la fin, on écrit -GER." },
-      { id:"imaginer", word:"imaginer", game:"imaginer", hint:"Créer quelque chose dans sa tête.", tip:"Ça commence par I-M-A. Le son [j] au milieu s’écrit G, et ça finit par -ER." },
-      { id:"imaginaire", word:"imaginaire", game:"imaginaire", hint:"Qui existe dans l’imagination, pas pour de vrai.", tip:"On retrouve « imaginer ». À la fin, on écrit -AIRE." },
-      { id:"aquatique", word:"aquatique", game:"aquatique", hint:"Qui est lié à l’eau.", tip:"Ça commence par AQUA. À la fin, on écrit -TIQUE." },
-      { id:"brillant", word:"brillant", game:"brillant", hint:"Qui brille, qui renvoie la lumière.", tip:"Attention, il y a deux L : BRI-LLANT." },
-      { id:"multicolore", word:"multicolore", game:"multicolore", hint:"Qui a plusieurs couleurs.", tip:"On entend « multi » puis « colore ». C’est un mot long, à écrire en un seul mot." },
-      { id:"petit", word:"petit", game:"petit", hint:"Pas grand.", tip:"Ça s’écrit P-E-T-I-T. Il y a un T à la fin." },
-      { id:"gros", word:"gros", game:"gros", hint:"Le contraire de petit.", tip:"Ça s’écrit G-R-O-S. Ne pas oublier le S final." },
-      { id:"avec", word:"avec", game:"avec", hint:"Je viens ___ toi.", tip:"Petit mot très courant. Il s’écrit A-V-E-C." },
-      { id:"dans", word:"dans", game:"dans", hint:"Le poisson nage ___ l’eau.", tip:"Petit mot de 4 lettres. Il finit par S." },
-      { id:"comme", word:"comme", game:"comme", hint:"Il nage ___ un dauphin.", tip:"Attention, il y a deux M : COMME." },
-    ],
-  },
+const ALL_WORDS = [
+  { id:"siecle", word:"siècle", game:"siècle", hint:"C’est très, très long : 100 ans.", tip:"Ça commence par le son [s] écrit avec S, pas avec C. On entend « siè » au début, avec un accent grave : è." },
+  { id:"humain", word:"humain", game:"humain", hint:"Une personne, pas un animal.", tip:"Ça commence par HU. Au milieu, on entend « main » comme la main du corps. Pas de E à la fin." },
+  { id:"vers", word:"vers", game:"vers", hint:"Je vais ___ l’école.", tip:"C’est le mot de direction. Il finit par S. Attention à ne pas écrire vert ou ver." },
+  { id:"voguer", word:"voguer", game:"voguer", hint:"Avancer doucement sur l’eau en bateau.", tip:"Ça commence par VO. Pour garder le son [g], il faut mettre U après le G." },
+  { id:"naviguer", word:"naviguer", game:"naviguer", hint:"Conduire un bateau sur la mer.", tip:"On entend [g] avant le son « é ». Pour garder ce son, il faut GU." },
+  { id:"permettre", word:"permettre", game:"permettre", hint:"Dire oui, autoriser.", tip:"On retrouve le mot « mettre » dedans. Comme « mettre », il y a deux T." },
+  { id:"atravers", word:"à travers", game:"travers", hint:"Passer d’un côté à l’autre, par exemple dans une forêt.", prefix:"à ", tip:"D’abord le petit mot « à » avec accent. Ensuite, le deuxième mot finit par S." },
+  { id:"celebre", word:"célèbre", game:"célèbre", hint:"Très connu, comme une grande star.", tip:"Il y a 2 accents. Le premier sonne É, le second sonne È." },
+  { id:"representer", word:"représenter", game:"représenter", hint:"Parler ou agir à la place de quelqu’un.", tip:"Le début ressemble à « re-pré ». On retrouve presque le mot « présent » à l’intérieur." },
+  { id:"pourquoi", word:"pourquoi", game:"pourquoi", hint:"Le mot qu’on dit pour demander la raison.", tip:"C’est comme deux petits mots collés : « pour » puis « quoi »." },
+  { id:"voici", word:"voici", game:"voici", hint:"Mot qu’on dit pour montrer quelque chose près de soi.", tip:"Le début fait penser à « voir ». La fin fait penser à « ici »." },
+  { id:"parceque", word:"parce que", game:"parce que", hint:"C’est le début d’une réponse à « pourquoi ? »", tip:"Ce n’est pas un seul mot. Il faut en écrire 2." },
+  { id:"dehors", word:"dehors", game:"dehors", hint:"Je sors jouer dans le jardin, je vais ___.", tip:"Ça commence par DE. À la fin, on entend « hors », comme quand on est à l’extérieur." },
+  { id:"apres", word:"après", game:"après", hint:"Le contraire de « avant ».", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
+  { id:"parfois", word:"parfois", game:"parfois", hint:"De temps en temps.", tip:"On peut le couper en 2 morceaux : « par » et « fois »." },
+  { id:"hier", word:"hier", game:"hier", hint:"Le jour juste avant aujourd’hui.", tip:"Petit mot de 4 lettres. Il commence par H et ne finit pas par E." },
+  { id:"si", word:"si", game:"si", hint:"Petit mot pour imaginer une condition, par exemple : ___ tu viens…", tip:"C’est un tout petit mot de 2 lettres, avec S puis I." },
+  { id:"deja", word:"déjà", game:"déjà", hint:"Quand quelque chose est fait avant maintenant.", tip:"Petit mot avec 2 accents. Le premier sonne É, le dernier sonne À." },
+  { id:"beaucoup", word:"beaucoup", game:"beaucoup", hint:"Le contraire de « un peu ».", tip:"On entend « beau » au début. Le mot finit par COUP, sans S à la fin." },
+  { id:"geographie", word:"géographie", game:"géographie", hint:"La matière de l’école qui parle des pays, des cartes et de la Terre.", tip:"Le début fait « géo ». Plus loin, le son [f] s’écrit PH." },
+  { id:"louest", word:"l'ouest", game:"ouest", hint:"Le côté où le soleil se couche.", prefix:"l'", tip:"Le mot commence par OU. Il faut penser à « west » en anglais pour la fin." },
+  { id:"fascinant", word:"fascinant", game:"fascinant", hint:"Tellement intéressant qu’on a du mal à regarder ailleurs.", tip:"Au milieu, le son [s] s’écrit SC. Le mot finit par -ant." },
+  { id:"musee", word:"musée", game:"musée", hint:"Un lieu où l’on va voir des tableaux, des statues ou des objets anciens.", tip:"Le mot finit par le son « é », écrit avec É puis un E muet juste après." },
+  { id:"surplomber", word:"surplomber", game:"surplomber", hint:"Être placé plus haut que quelque chose.", tip:"Le mot commence par SUR. On retrouve « plomb » dedans, avec un B qu’on n’entend pas." },
+  { id:"lumiere", word:"lumière", game:"lumière", hint:"Ce qu’allume une lampe dans une pièce sombre.", tip:"Le début est LU. Au milieu, il y a un È avec accent grave." },
+  { id:"plusieurs", word:"plusieurs", game:"plusieurs", hint:"Plus d’un.", tip:"Le mot commence par PLUS. Il faut garder le S de la fin." },
+  { id:"voler", word:"voler", game:"voler", hint:"Ce que font les oiseaux dans le ciel.", tip:"Le début est VOL, comme dans « un vol d’oiseau »." },
+  { id:"ouvert", word:"ouvert", game:"ouvert", hint:"Le contraire de « fermé ».", tip:"Ça commence par OUV. À la fin, on entend presque « air », mais ça s’écrit avec ER puis T." },
+  { id:"fermer", word:"fermer", game:"fermer", hint:"Le contraire de « ouvrir ».", tip:"Le début est FERM, comme dans « fermeture »." },
+  { id:"escalier", word:"escalier", game:"escalier", hint:"Une suite de marches pour monter ou descendre.", tip:"Le début est ESCA. La fin s’écrit -IER." },
+  { id:"enfin", word:"enfin", game:"enfin", hint:"Le mot qu’on dit quand on a trop attendu.", tip:"Le mot commence par EN. À la fin, le son nasal s’écrit IN." },
+  { id:"soleil", word:"soleil", game:"soleil", hint:"Il brille dans le ciel pendant la journée.", tip:"Le début est SOL. La fin s’écrit -EIL, comme dans sommeil." },
+  { id:"chauffer", word:"chauffer", game:"chauffer", hint:"Rendre plus chaud.", tip:"Le début vient de « chaud ». Attention, il y a deux F." },
+  { id:"sommeil", word:"sommeil", game:"sommeil", hint:"Ce qu’on a quand on bâille et qu’on veut dormir.", prefix:"le ", tip:"Il y a deux M. La fin s’écrit -EIL, comme dans soleil." },
+  { id:"bourgeons", word:"bourgeons", game:"bourgeons", hint:"Petites boules sur les branches avant les feuilles.", prefix:"les ", tip:"Au milieu, le son [j] s’écrit GE. À la fin, comme il y en a plusieurs, il faut un S." },
+  { id:"gazouiller", word:"gazouiller", game:"gazouiller", hint:"Faire de petits chants d’oiseaux.", tip:"Le début est GAZOU. À la fin, il faut deux L avant ER." },
+  { id:"ecureuils", word:"écureuils", game:"écureuils", hint:"Petits animaux qui grimpent aux arbres et cachent des noisettes.", prefix:"les ", tip:"Le mot commence par ÉCU. La fin s’écrit -EUILS." },
+  { id:"sautiller", word:"sautiller", game:"sautiller", hint:"Faire plein de petits sauts.", tip:"Le début vient de « saut ». À la fin, il faut deux L avant ER." },
+  { id:"maison", word:"maison", game:"maison", hint:"L’endroit où habite une famille.", tip:"Au début, on entend « mai ». À la fin, le son nasal s’écrit ON." },
+  // ─── La famille ───
+  { id:"membre", word:"membre", game:"membre", prefix:"un ", hint:"Quelqu'un qui fait partie d'un groupe ou d'une famille.", tip:"Au milieu, il y a BR. Le mot finit par RE." },
+  { id:"enfance", word:"enfance", game:"enfance", prefix:"l'", hint:"La période de la vie quand on est petit enfant.", tip:"Le mot commence par EN. On retrouve le mot enfant dedans." },
+  { id:"famille", word:"famille", game:"famille", prefix:"la ", hint:"Les parents, les frères, les sœurs, les grands-parents.", tip:"Au milieu, il y a deux L. Le mot finit par ILLE." },
+  { id:"fille", word:"fille", game:"fille", prefix:"la ", hint:"Un enfant de sexe féminin.", tip:"Le mot finit par ILLE avec deux L." },
+  { id:"frere", word:"frère", game:"frère", prefix:"le ", hint:"Un garçon qui a les mêmes parents que toi.", tip:"Il y a un accent grave sur le È. Le mot finit par RE." },
+  { id:"soeur", word:"sœur", game:"sœur", prefix:"la ", hint:"Une fille qui a les mêmes parents que toi.", tip:"Le son [eu] s'écrit Œ, avec la lettre O collée au E." },
+  { id:"peintre", word:"peintre", game:"peintre", prefix:"la ", hint:"Une personne qui crée des tableaux.", tip:"Le son [in] s'écrit EIN. Le mot finit par TRE." },
+  { id:"ruban", word:"ruban", game:"ruban", prefix:"un ", hint:"Une longue bande de tissu colorée pour décorer.", tip:"Le début est RU. La fin s'écrit AN." },
+  { id:"arbre", word:"arbre", game:"arbre", prefix:"un ", hint:"Une grande plante avec un tronc et des branches.", tip:"Le début est AR. Le mot finit par BRE." },
+  { id:"parent", word:"parent", game:"parent", prefix:"le ", hint:"Le père ou la mère d'un enfant.", tip:"Le début est PAR. La fin s'écrit ENT avec un T muet." },
+  { id:"tenue", word:"tenue", game:"tenue", prefix:"la ", hint:"Les vêtements qu'on porte pour une occasion.", tip:"Le début est TEN. Le mot finit par UE." },
+  { id:"mariage", word:"mariage", game:"mariage", prefix:"le ", hint:"La fête quand deux personnes décident de vivre ensemble.", tip:"On retrouve le mot mari au début. Le son [j] s'écrit GE." },
+  { id:"pays", word:"pays", game:"pays", prefix:"le ", hint:"Une grande région du monde, comme la France.", tip:"On ne prononce pas le S de la fin. Attention au Y au milieu." },
+  { id:"origine", word:"origine", game:"origine", prefix:"l'", hint:"Le point de départ, d'où vient quelqu'un.", tip:"Le début est ORI. On retrouve un G avant la fin -INE." },
+  { id:"pere", word:"père", game:"père", prefix:"le ", hint:"Le papa d'un enfant.", tip:"Court : P puis È puis RE. L'accent est grave." },
+  { id:"mere", word:"mère", game:"mère", prefix:"la ", hint:"La maman d'un enfant.", tip:"Court : M puis È puis RE. L'accent est grave." },
+  { id:"grandsparents", word:"grands-parents", game:"grands-parents", prefix:"les ", hint:"Le papa et la maman de ton père ou de ta mère.", tip:"Deux mots reliés par un trait d'union. Le premier finit par DS." },
+  { id:"cote", word:"côté", game:"côté", prefix:"le ", hint:"La partie gauche ou droite de quelque chose.", tip:"Il y a un accent circonflexe sur le Ô. La fin s'écrit É." },
+  { id:"voir", word:"voir", game:"voir", hint:"Utiliser ses yeux pour percevoir quelque chose.", tip:"Court : V, O, I, R. Juste 4 lettres." },
+  { id:"tenir", word:"tenir", game:"tenir", hint:"Garder quelque chose dans ses mains.", tip:"Ça commence par TEN. La fin est IR." },
+  { id:"tracer", word:"tracer", game:"tracer", hint:"Dessiner une ligne ou un trait.", tip:"Ça commence par TRA. Le son [s] devant le E s'écrit avec C." },
+  { id:"reconnaitre", word:"reconnaître", game:"reconnaître", hint:"Identifier quelqu'un qu'on a déjà vu.", tip:"Le début est RE + CON + NAÎ. Le Î prend un accent circonflexe. La fin est TRE." },
+  { id:"petit", word:"petit", game:"petit", hint:"Le contraire de grand.", tip:"Le mot finit par IT avec un T muet." },
+  { id:"genealogique", word:"généalogique", game:"généalogique", hint:"Qui parle de la famille et de ses origines (arbre ___).", tip:"Ça commence par GÉ. Au milieu, on retrouve ALOGIQUE." },
+  { id:"represente", word:"représenté", game:"représenté", hint:"Montré ou dessiné sur quelque chose.", tip:"Le début est RE-PRÉ. On retrouve presque présent dedans. La fin est É." },
+  { id:"maternel", word:"maternel", game:"maternel", hint:"Qui vient du côté de la mère.", tip:"Le début est MATER. La fin est NEL." },
+  { id:"paternel", word:"paternel", game:"paternel", hint:"Qui vient du côté du père.", tip:"Le début est PATER. La fin est NEL." },
+  { id:"autour", word:"autour", game:"autour", hint:"Tout ce qui entoure quelque chose, de tous les côtés.", tip:"On peut le couper : AU + TOUR. La fin est OUR." },
+  { id:"dans", word:"dans", game:"dans", hint:"À l'intérieur de quelque chose.", tip:"Petit mot de 4 lettres. La fin s'écrit ANS." },
+  { id:"mais", word:"mais", game:"mais", hint:"Mot pour opposer deux idées.", tip:"Petit mot de 4 lettres. La fin s'écrit AIS." },
+  { id:"entre", word:"entre", game:"entre", hint:"Au milieu de deux choses.", tip:"Le début est EN. La fin est TRE." },
+  { id:"pres", word:"près", game:"près", hint:"Le contraire de loin.", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
+  { id:"ilya", word:"il y a", game:"il y a", hint:"Ce qu'on dit pour indiquer que quelque chose existe.", tip:"Ce sont trois petits mots : IL, Y et A." },
 ];
 
-const ALL_WORDS = WORD_PACKS.flatMap(pack => pack.words);
+// ─── DICTÉES (groupes de mots) ───
+const DICTEES = {
+  "Les explorateurs": new Set(["siecle","humain","vers","voguer","naviguer","permettre","atravers","celebre","representer","pourquoi","voici","parceque","dehors","apres","parfois","hier","si","deja","beaucoup","geographie","louest","fascinant","musee","surplomber","lumiere","plusieurs","voler","ouvert","fermer","escalier","enfin"]),
+  "Le printemps": new Set(["soleil","chauffer","sommeil","bourgeons","gazouiller","ecureuils","sautiller","maison"]),
+  "La famille": new Set(["membre","enfance","famille","fille","frere","soeur","peintre","ruban","arbre","parent","tenue","mariage","pays","origine","pere","mere","grandsparents","cote","voir","tenir","tracer","reconnaitre","petit","genealogique","represente","maternel","paternel","autour","dans","mais","entre","pres","ilya"]),
+};
+// Order: most recent dictée first (highlighted), "Toutes les dictées" last
+const DICTEE_ORDER = ["La famille", "Le printemps", "Les explorateurs"];
+const DICTEE_NAMES = [...DICTEE_ORDER, "Toutes les dictées"];
+const LATEST_DICTEE = DICTEE_ORDER[0];
+
+// Dictées that have an English translation available (module EN)
+const DICTEES_EN_ENABLED = new Set(["La famille"]);
+
+// English translations (per word id) for the "La famille" dictée
+const WORDS_EN = {
+  membre:        { word:"member",       game:"member",       prefix:"a ",   hint:"Someone who is part of a group or a family.", tip:"6 letters. Double B before ER." },
+  enfance:       { word:"childhood",    game:"childhood",    prefix:"",     hint:"The time of life when you are a small child.", tip:"Two parts joined: CHILD + HOOD." },
+  famille:       { word:"family",       game:"family",       prefix:"the ", hint:"Parents, brothers, sisters, grandparents…", tip:"6 letters. Ends with a Y: FAMIL-Y." },
+  fille:         { word:"daughter",     game:"daughter",     prefix:"the ", hint:"A female child of her parents.", tip:"Tricky: D-A-U-G-H-T-E-R. The G and H are silent." },
+  frere:         { word:"brother",      game:"brother",      prefix:"a ",   hint:"A boy with the same parents as you.", tip:"BRO + THER. Starts with a B." },
+  soeur:         { word:"sister",       game:"sister",       prefix:"a ",   hint:"A girl with the same parents as you.", tip:"6 letters: SIS + TER." },
+  peintre:       { word:"painter",      game:"painter",      prefix:"a ",   hint:"A person who makes pictures with paint.", tip:"Starts with PAINT + ER." },
+  ruban:         { word:"ribbon",       game:"ribbon",       prefix:"a ",   hint:"A long colourful strip of fabric used to decorate.", tip:"Double B in the middle." },
+  arbre:         { word:"tree",         game:"tree",         prefix:"a ",   hint:"A tall plant with a trunk and branches.", tip:"Just 4 letters: T-R-E-E. Double E." },
+  parent:        { word:"parent",       game:"parent",       prefix:"a ",   hint:"The father or the mother of a child.", tip:"PAR + ENT. Same spelling as in French!" },
+  tenue:         { word:"outfit",       game:"outfit",       prefix:"an ",  hint:"The clothes someone wears for a special day.", tip:"OUT + FIT. 6 letters." },
+  mariage:       { word:"wedding",      game:"wedding",      prefix:"a ",   hint:"The party when two people decide to live together.", tip:"Double D in the middle: WED + DING." },
+  pays:          { word:"country",      game:"country",      prefix:"a ",   hint:"A big region of the world, like France or England.", tip:"COUN + TRY. Ends with a Y." },
+  origine:       { word:"origin",       game:"origin",       prefix:"the ", hint:"The point where someone or something comes from.", tip:"6 letters: ORI + GIN." },
+  pere:          { word:"father",       game:"father",       prefix:"the ", hint:"The dad of a child.", tip:"FA + THER. 6 letters." },
+  mere:          { word:"mother",       game:"mother",       prefix:"the ", hint:"The mum of a child.", tip:"MO + THER. 6 letters." },
+  grandsparents: { word:"grandparents", game:"grandparents", prefix:"the ", hint:"The parents of your father or your mother.", tip:"One word made of two: GRAND + PARENTS." },
+  cote:          { word:"side",         game:"side",         prefix:"the ", hint:"The left or right part of something.", tip:"Just 4 letters: S-I-D-E." },
+  voir:          { word:"to see",       game:"to see",       prefix:"",     hint:"To use your eyes to notice something.", tip:"Two words: TO + SEE. Double E at the end." },
+  tenir:         { word:"to hold",      game:"to hold",      prefix:"",     hint:"To keep something in your hands.", tip:"Two words: TO + HOLD." },
+  tracer:        { word:"to draw",      game:"to draw",      prefix:"",     hint:"To make lines on paper with a pen or pencil.", tip:"Two words: TO + DRAW. Ends with AW." },
+  reconnaitre:   { word:"to recognize", game:"to recognize", prefix:"",     hint:"To identify someone you have seen before.", tip:"RE + COG + NIZE." },
+  petit:         { word:"small",        game:"small",        prefix:"",     hint:"The opposite of big.", tip:"5 letters with double L at the end: SMA + LL." },
+  genealogique:  { word:"genealogical", game:"genealogical", prefix:"",     hint:"About family history (___ tree).", tip:"Hard word! GEN + E + A + LOG + I + CAL." },
+  represente:    { word:"represented",  game:"represented",  prefix:"",     hint:"Shown or drawn in a picture.", tip:"RE + PRESENT + ED. Ends with ED." },
+  maternel:      { word:"maternal",     game:"maternal",     prefix:"",     hint:"Coming from the mother's side.", tip:"Like 'mother': MATER + NAL." },
+  paternel:      { word:"paternal",     game:"paternal",     prefix:"",     hint:"Coming from the father's side.", tip:"Like 'father': PATER + NAL." },
+  autour:        { word:"around",       game:"around",       prefix:"",     hint:"On every side of something.", tip:"A + ROUND. 6 letters." },
+  dans:          { word:"in",           game:"in",           prefix:"",     hint:"Inside something.", tip:"Tiny word: just I and N." },
+  mais:          { word:"but",          game:"but",          prefix:"",     hint:"A word used to contrast two ideas.", tip:"3 letters: B-U-T." },
+  entre:         { word:"between",      game:"between",      prefix:"",     hint:"In the middle of two things.", tip:"BE + TWEEN. Double E." },
+  pres:          { word:"near",         game:"near",         prefix:"",     hint:"The opposite of far.", tip:"4 letters: N-E-A-R." },
+  ilya:          { word:"there is",     game:"there is",     prefix:"",     hint:"Words used to say that something exists.", tip:"Two words: THERE + IS." },
+};
+
+const localizeWord = (w, lang) => {
+  if (lang !== "en") return w;
+  const en = WORDS_EN[w.id];
+  return en ? { ...w, ...en } : w;
+};
 
 // ─── CREATURES to unlock ───
 const CREATURES = [
@@ -165,7 +191,7 @@ const MILESTONES = {
 
 const EXTRA_LETTERS = [..."abcdefghijklmnopqrstuvwxyzéèêàâùûôî".normalize("NFC")];
 const shuffle = (a) => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
-const speakWord = (t) => { const u=new SpeechSynthesisUtterance(t); u.lang="fr-FR"; u.rate=0.75; speechSynthesis.cancel(); speechSynthesis.speak(u); };
+const speakWord = (t, lang="fr-FR") => { const u=new SpeechSynthesisUtterance(t); u.lang=lang; u.rate = lang.startsWith("en") ? 0.9 : 0.75; speechSynthesis.cancel(); speechSynthesis.speak(u); };
 
 // ─── STORAGE ───
 const STORAGE_KEY = "leo-mots-aventure";
@@ -181,6 +207,19 @@ const getTotalWins = () => { const d = loadData(); return d.totalWins || 0; };
 const saveTotalWins = (n) => { const d = loadData(); d.totalWins = n; saveData(d); };
 const getAchievements = () => { const d = loadData(); return new Set(d.achievements || []); };
 const saveAchievements = (s) => { const d = loadData(); d.achievements = [...s]; saveData(d); };
+const getSelectedDictee = () => { const d = loadData(); return d.selectedDictee || LATEST_DICTEE; };
+const saveSelectedDictee = (name) => { const d = loadData(); d.selectedDictee = name; saveData(d); };
+// Words mastered "du premier coup" via Écriture/Dictée (no fail, no hint, no payment, full validation)
+const getMastered = () => { const d = loadData(); return new Set(d.mastered || []); };
+const saveMastered = (s) => { const d = loadData(); d.mastered = [...s]; saveData(d); };
+// Dictées completed perfectly (all words mastered without any faute over a single session)
+const getDicteePerfect = () => { const d = loadData(); return new Set(d.dicteePerfect || []); };
+const saveDicteePerfect = (s) => { const d = loadData(); d.dicteePerfect = [...s]; saveData(d); };
+// Per-dictée toggle: only train words not yet mastered
+const getOnlyTodo = () => { const d = loadData(); return d.onlyTodo || {}; };
+const saveOnlyTodo = (m) => { const d = loadData(); d.onlyTodo = m; saveData(d); };
+const getLang = () => { const d = loadData(); return d.lang === "en" ? "en" : "fr"; };
+const saveLang = (l) => { const d = loadData(); d.lang = l; saveData(d); };
 
 // ─── SELECTION HELPER ───
 const getWordsForSelection = (mode, packId) => {
@@ -482,12 +521,13 @@ function MapView({ currentWaypoint, completedWaypoints, onContinue, isPreBoss })
 }
 
 // ─── SOUND BUTTON ───
-function SoundButton({ word, size = 40 }) {
+function SoundButton({ word, size = 40, lang = "fr-FR" }) {
+  const isEn = lang.startsWith("en");
   return (
-    <button onClick={() => speakWord(word)} title="Écouter"
-      style={{ width:size, height:size, borderRadius:"50%", border:"none", background:"linear-gradient(135deg,#8b5cf6,#7c3aed)", color:"#fff", fontSize:size*0.45, cursor:"pointer", boxShadow:"0 3px 0 #5b21b6", transition:"transform 0.15s", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}
+    <button onClick={() => speakWord(word, lang)} title={isEn ? "Listen (English)" : "Écouter (Français)"}
+      style={{ width:size, height:size, borderRadius:"50%", border:"none", background: isEn ? "linear-gradient(135deg,#3b82f6,#1d4ed8)" : "linear-gradient(135deg,#8b5cf6,#7c3aed)", color:"#fff", fontSize:size*0.42, cursor:"pointer", boxShadow: isEn ? "0 3px 0 #1e3a8a" : "0 3px 0 #5b21b6", transition:"transform 0.15s", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}
       onMouseDown={e=>e.currentTarget.style.transform="scale(0.9)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}
-    >🔊</button>
+    >{isEn ? "🇬🇧" : "🔊"}</button>
   );
 }
 
@@ -517,7 +557,7 @@ function TipBox({ text }) {
 }
 
 // ─── GAME 1: Lettres mélangées ───
-function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
+function ScrambleGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR" }) {
   const clean = wordObj.game.normalize("NFC").replace(/\s/g,"");
   const prefix = wordObj.prefix||"";
   const [allLetters] = useState(() => {
@@ -571,7 +611,7 @@ function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
       <p style={{color:"#ef4444",fontSize:"0.7rem",marginBottom:4}}>⚠️ Lettres pièges !</p>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:6,flexWrap:"wrap"}}>
         <p style={{color:"#d4a574",fontSize:"0.85rem",fontStyle:"italic",margin:0}}>Indice : {wordObj.hint}</p>
-        <SoundButton word={wordObj.word} size={32}/>
+        <SoundButton word={wordObj.word} size={32} lang={voiceLang}/>
         {!boughtTip && <PaidHintButton label="💡" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>}
       </div>
       {showTip && !boughtTip && <TipBox text={`Le mot a ${clean.length} lettres et commence par « ${clean[0]} ».`}/>}
@@ -600,7 +640,7 @@ function ScrambleGame({ wordObj, onWin, onFail, score, onSpend }) {
 }
 
 // ─── GAME 2: Écris le mot complet ───
-function WriteGame({ wordObj, onWin, onFail, score, onSpend }) {
+function WriteGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR" }) {
   const target = wordObj.game.toLowerCase();
   const prefix = wordObj.prefix||"";
   const [input,setInput]=useState("");
@@ -621,7 +661,7 @@ function WriteGame({ wordObj, onWin, onFail, score, onSpend }) {
       <h3 style={{color:"#fbbf24",fontFamily:"'Fredoka',sans-serif",fontSize:"1.1rem",marginBottom:6}}>✏️ Écris le mot en entier !</h3>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:6,flexWrap:"wrap"}}>
         <p style={{color:"#d4a574",fontSize:"0.85rem",fontStyle:"italic",margin:0}}>Indice : {wordObj.hint}</p>
-        <SoundButton word={wordObj.word} size={32}/>
+        <SoundButton word={wordObj.word} size={32} lang={voiceLang}/>
         {!boughtTip && <PaidHintButton label="💡" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>}
       </div>
       {showTip && <TipBox text={wordObj.tip}/>}
@@ -637,11 +677,11 @@ function WriteGame({ wordObj, onWin, onFail, score, onSpend }) {
 }
 
 // ─── GAME 3: Dictée (écouter) ───
-function ListenGame({ wordObj, onWin, onFail, score, onSpend }) {
+function ListenGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR" }) {
   const [input,setInput]=useState(""); const [status,setStatus]=useState(null);
   const [revealed,setRevealed]=useState(false);
   const [boughtTip,setBoughtTip]=useState(false); const [showTip,setShowTip]=useState(false);
-  useEffect(()=>{const t=setTimeout(()=>speakWord(wordObj.word),400);return()=>clearTimeout(t);},[wordObj.word]);
+  useEffect(()=>{const t=setTimeout(()=>speakWord(wordObj.word, voiceLang),400);return()=>clearTimeout(t);},[wordObj.word, voiceLang]);
   const submit=()=>{
     if(!input.trim())return;const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ");
     if(norm(input)===norm(wordObj.word)||norm(input)===norm(wordObj.game)){setStatus("win");setTimeout(()=>onWin(),300);}
@@ -654,7 +694,7 @@ function ListenGame({ wordObj, onWin, onFail, score, onSpend }) {
         {!boughtTip && <PaidHintButton label="💡 Astuce" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>}
       </div>
       {showTip && <TipBox text={wordObj.tip}/>}
-      <button onClick={()=>speakWord(wordObj.word)} style={{width:64,height:64,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#8b5cf6,#7c3aed)",color:"#fff",fontSize:"1.8rem",cursor:"pointer",boxShadow:"0 4px 0 #5b21b6",marginBottom:16,marginTop:6}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.93)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>🔊</button>
+      <button onClick={()=>speakWord(wordObj.word, voiceLang)} title={voiceLang.startsWith("en") ? "Listen" : "Écouter"} style={{width:64,height:64,borderRadius:"50%",border:"none",background: voiceLang.startsWith("en") ? "linear-gradient(135deg,#3b82f6,#1d4ed8)" : "linear-gradient(135deg,#8b5cf6,#7c3aed)",color:"#fff",fontSize:"1.8rem",cursor:"pointer",boxShadow: voiceLang.startsWith("en") ? "0 4px 0 #1e3a8a" : "0 4px 0 #5b21b6",marginBottom:16,marginTop:6}} onMouseDown={e=>e.currentTarget.style.transform="scale(0.93)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>{voiceLang.startsWith("en") ? "🇬🇧" : "🔊"}</button>
       <div style={{display:"flex",justifyContent:"center",gap:8,animation:status==="fail"?"headShake 0.5s":status==="win"?"tada 0.8s":"none"}}>
         <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Écris ici..." style={{padding:"10px 14px",borderRadius:10,border:status==="win"?"2px solid #22c55e":status==="fail"?"2px solid #ef4444":"2px solid rgba(251,191,36,0.4)",background:"rgba(0,0,0,0.3)",color:"#fff",fontSize:"1.1rem",fontFamily:"'Fredoka',sans-serif",outline:"none",width:180}}/>
         <button onClick={submit} style={{padding:"10px 18px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 3px 0 #15803d"}}>OK</button>
@@ -667,7 +707,7 @@ function ListenGame({ wordObj, onWin, onFail, score, onSpend }) {
 // ─── GAME 4: Pendu (BOSS — no hints unless paid) ───
 const HP=[(c)=>{c.beginPath();c.arc(150,55,16,0,Math.PI*2);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,71);c.lineTo(150,120);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,85);c.lineTo(125,105);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,85);c.lineTo(175,105);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,120);c.lineTo(130,150);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,120);c.lineTo(170,150);c.stroke();},(c)=>{c.beginPath();c.moveTo(143,50);c.lineTo(147,54);c.stroke();c.beginPath();c.moveTo(147,50);c.lineTo(143,54);c.stroke();},(c)=>{c.beginPath();c.moveTo(153,50);c.lineTo(157,54);c.stroke();c.beginPath();c.moveTo(157,50);c.lineTo(153,54);c.stroke();c.beginPath();c.arc(150,65,5,0,Math.PI,true);c.stroke();}];
 
-function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss }) {
+function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss, voiceLang = "fr-FR" }) {
   const gw=wordObj.game.normalize("NFC").toLowerCase(); const prefix=wordObj.prefix||"";
   const unique=useMemo(()=>new Set([...gw.replace(/\s/g,"")]),[gw]);
   const [guessed,setGuessed]=useState(new Set()); const [errors,setErrors]=useState(0); const [status,setStatus]=useState(null);
@@ -688,11 +728,11 @@ function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss }) {
       {/* Paid hints row */}
       <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:10,flexWrap:"wrap"}}>
         <PaidHintButton label="📝 Indice" cost={10} score={score} disabled={boughtHint} onBuy={()=>{onSpend(10);setBoughtHint(true);}}/>
-        <PaidHintButton label="🔊 Son" cost={10} score={score} disabled={boughtSound} onBuy={()=>{onSpend(10);setBoughtSound(true);speakWord(wordObj.word);}}/>
+        <PaidHintButton label="🔊 Son" cost={10} score={score} disabled={boughtSound} onBuy={()=>{onSpend(10);setBoughtSound(true);speakWord(wordObj.word, voiceLang);}}/>
         <PaidHintButton label="💡 Astuce" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>
       </div>
       {boughtHint && <p style={{color:"#d4a574",fontSize:"0.85rem",fontStyle:"italic",marginBottom:4}}>Indice : {wordObj.hint}</p>}
-      {boughtSound && <div style={{marginBottom:8}}><SoundButton word={wordObj.word} size={34}/></div>}
+      {boughtSound && <div style={{marginBottom:8}}><SoundButton word={wordObj.word} size={34} lang={voiceLang}/></div>}
       {showTip && <TipBox text={wordObj.tip}/>}
       <canvas ref={canvasRef} width={300} height={170} style={{display:"block",margin:"4px auto 12px",maxWidth:"100%"}}/>
       <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:4,marginBottom:16,flexWrap:"wrap",animation:status==="won"?"tada 0.8s":status==="lost"?"headShake 0.5s":"none"}}>
@@ -785,9 +825,25 @@ export default function App() {
   const [musicOn, setMusicOn] = useState(true);
   const [bossWord, setBossWord] = useState(null);
   const [sessionPlayedWords, setSessionPlayedWords] = useState([]);
+<<<<<<< HEAD
   const [selectedMode, setSelectedMode] = useState("all");
   const [selectedPackId, setSelectedPackId] = useState(null);
   const [packEmptyWarning, setPackEmptyWarning] = useState(false);
+=======
+  const [selectedDictee, setSelectedDictee] = useState(getSelectedDictee());
+  // Mastery & dictée tracking
+  const [mastered, setMastered] = useState(getMastered());
+  const [dicteePerfect, setDicteePerfect] = useState(getDicteePerfect());
+  const [onlyTodo, setOnlyTodo] = useState(getOnlyTodo());
+  // Per-word session tracking
+  const [wordPhase, setWordPhase] = useState("main"); // 'main' | 'writeValidation'
+  const [wordHadFail, setWordHadFail] = useState(false);
+  const [sessionResults, setSessionResults] = useState({}); // { [wordId]: 'mastered' | 'todo' }
+  const [justPerfectedDictee, setJustPerfectedDictee] = useState(null);
+  // Language mode (fr / en) for the whole app
+  const [lang, setLang] = useState(getLang());
+  const voiceLang = lang === "en" ? "en-US" : "fr-FR";
+>>>>>>> 5a324b0 (go)
 
   // Cheat: + adds life
   useEffect(() => {
@@ -795,6 +851,7 @@ export default function App() {
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, []);
 
+<<<<<<< HEAD
   const pickGame = () => NORMAL_GAMES[Math.floor(Math.random() * NORMAL_GAMES.length)];
 
   const buildQueue = (words) => {
@@ -807,11 +864,37 @@ export default function App() {
       const sa = stats[a.id]?.wins || 0, sb = stats[b.id]?.wins || 0;
       if (sa !== sb) return sa - sb;
       return Math.random() - 0.5;
+=======
+  // ── Detect dictée perfection on entering the victory screen
+  useEffect(() => {
+    if (screen !== "victory") return;
+    if (selectedDictee === "Toutes les dictées") return;
+    const setIds = DICTEES[selectedDictee];
+    if (!setIds) return;
+    // All words of the dictée must be in mastered set
+    const allMastered = [...setIds].every(id => mastered.has(id));
+    if (!allMastered) return;
+    if (dicteePerfect.has(selectedDictee)) return; // already celebrated
+    // Mark as perfect, persist, trigger celebration
+    setDicteePerfect(prev => {
+      const next = new Set(prev); next.add(selectedDictee); saveDicteePerfect(next); return next;
+>>>>>>> 5a324b0 (go)
     });
-    // Take first 20 or all, then shuffle
-    return shuffle(pool.slice(0, Math.min(20, pool.length)));
+    setJustPerfectedDictee(selectedDictee);
+  }, [screen, selectedDictee, mastered, dicteePerfect]);
+
+  // Helper for the title screen and recap
+  const dicteeStats = (name) => {
+    const ids = name === "Toutes les dictées"
+      ? new Set(ALL_WORDS.map(w => w.id))
+      : (DICTEES[name] || new Set());
+    const total = ids.size;
+    let done = 0;
+    ids.forEach(id => { if (mastered.has(id)) done++; });
+    return { total, done, isPerfect: total > 0 && done === total };
   };
 
+<<<<<<< HEAD
   const startGame = () => {
     const words = getWordsForSelection(selectedMode, selectedPackId);
     const queue = buildQueue(words);
@@ -820,6 +903,39 @@ export default function App() {
       return;
     }
     setPackEmptyWarning(false);
+=======
+  const pickGame = () => NORMAL_GAMES[Math.floor(Math.random() * NORMAL_GAMES.length)];
+
+  const buildQueue = (overrides = {}) => {
+    const disabled = getDisabled();
+    const dicteeSet = DICTEES[selectedDictee] || null; // null = toutes
+    const todoMode = overrides.forceTodo ?? !!onlyTodo[selectedDictee];
+    const masteredSet = mastered;
+    const isEn = lang === "en";
+    let pool = ALL_WORDS.filter(w =>
+      !disabled.has(w.id)
+      && (!dicteeSet || dicteeSet.has(w.id))
+      && (!isEn || WORDS_EN[w.id]) // in EN mode, only keep words that have a translation
+    );
+    if (pool.length === 0) pool = [...ALL_WORDS].filter(w => !isEn || WORDS_EN[w.id]);
+    if (pool.length === 0) pool = [...ALL_WORDS];
+    // Split into todo (not mastered) vs done (mastered)
+    const todo = pool.filter(w => !masteredSet.has(w.id));
+    const done = pool.filter(w => masteredSet.has(w.id));
+    let queue;
+    if (todoMode) {
+      queue = shuffle(todo);
+    } else {
+      // Priority: todo first (shuffled), then done as filler
+      queue = [...shuffle(todo), ...shuffle(done)];
+    }
+    // Cap at 20
+    return queue.slice(0, Math.min(20, queue.length));
+  };
+
+  const startGameWith = (queue) => {
+    if (!queue.length) return;
+>>>>>>> 5a324b0 (go)
     setWordQueue(queue);
     setCurrentIdx(0); setGameType(pickGame()); setScore(0); setLives(5);
     setStreak(0); setMaxStreak(0); setWordsLearned(new Set());
@@ -829,13 +945,49 @@ export default function App() {
     setMilestonePopup(null);
     setShowFullMap(false); setZoneStartLives(5);
     setBossWord(null); setSessionPlayedWords([]);
+    setWordPhase("main"); setWordHadFail(false);
+    setSessionResults({}); setJustPerfectedDictee(null);
     setScreen("play");
+  };
+  const startGame = () => startGameWith(buildQueue());
+  const startGameTodoOnly = () => {
+    // Force the "to retravailler" mode for next session
+    const q = buildQueue({ forceTodo: true });
+    if (q.length === 0) return; // nothing to retrain
+    startGameWith(q);
   };
 
   const handleWin = () => {
-    setShowFireworks(true);
     const w = bossWord || wordQueue[currentIdx];
-    
+
+    // ── Scramble → Write validation: ensure the child writes the word too
+    if (!isBoss && wordPhase === "main" && gameType === "scramble") {
+      // Switch to a forced Write phase for the same word; do NOT advance.
+      setWordPhase("writeValidation");
+      setGameType("write");
+      setStartTime(Date.now());
+      // Keep usedHints / wordHadFail (they track the whole word attempt)
+      return;
+    }
+
+    setShowFireworks(true);
+
+    // ── Mastery tracking (per dictée session + persistent set)
+    if (!isBoss) {
+      const wasFlaggedTodo = sessionResults[w.id] === "todo";
+      const perfect = !wordHadFail && !usedHints && !wasFlaggedTodo;
+      if (perfect) {
+        setSessionResults(prev => ({ ...prev, [w.id]: "mastered" }));
+        // Add to persistent mastered set
+        setMastered(prev => {
+          if (prev.has(w.id)) return prev;
+          const next = new Set(prev); next.add(w.id); saveMastered(next); return next;
+        });
+      } else {
+        setSessionResults(prev => ({ ...prev, [w.id]: prev[w.id] || "todo" }));
+      }
+    }
+
     // Calculate response time
     const responseTime = startTime ? Date.now() - startTime : 0;
     
@@ -933,6 +1085,8 @@ export default function App() {
     setCurrentIdx(p => p + 1); setGameType(forceType || pickGame()); setIsBoss(!!forceBoss);
     setShowMap(false); setShowFullMap(false);
     setStartTime(Date.now()); setUsedHints(false);
+    // Reset per-word session tracking
+    setWordPhase("main"); setWordHadFail(false);
     
     // Track zone start for "sans faute" milestone
     if ((currentIdx + 1) % 5 === 1) setZoneStartLives(lives);
@@ -941,7 +1095,21 @@ export default function App() {
   const handleFail = () => {
     const w = bossWord || wordQueue[currentIdx];
     const ws = getWordStats(); if (!ws[w.id]) ws[w.id] = { wins: 0, fails: 0 }; ws[w.id].fails++; saveWordStats(ws);
-    setStreak(0); setUsedHints(true); setLives(p => { const n = p - 1; if (n <= 0) setTimeout(() => setScreen("gameover"), 500); return n; });
+    // Mark word as "to retravailler" for this session (sticky)
+    setSessionResults(prev => prev[w.id] === "todo" ? prev : { ...prev, [w.id]: "todo" });
+    // Re-queue once per attempt (a single word may trigger several onFail in scramble)
+    if (!isBoss && !wordHadFail) {
+      setWordHadFail(true);
+      setWordQueue(prev => {
+        const remaining = prev.length - currentIdx - 1;
+        const next = [...prev];
+        const insertOffset = 1 + Math.floor(Math.random() * (Math.max(remaining, 0) + 1));
+        next.splice(currentIdx + insertOffset, 0, w);
+        return next;
+      });
+    }
+    setStreak(0); setUsedHints(true);
+    setLives(p => { const n = p - 1; if (n <= 0) setTimeout(() => setScreen("gameover"), 500); return n; });
   };
 
   const handleSpend = (n) => { setScore(p => Math.max(0, p - n)); setUsedHints(true); };
@@ -971,6 +1139,34 @@ export default function App() {
 
       <MusicController screen={screen} musicOn={musicOn} />
       <button onClick={() => setMusicOn(p => !p)} style={{position:"fixed",top:10,right:10,zIndex:200,padding:"6px 12px",borderRadius:20,border:"1px solid rgba(251,191,36,0.4)",background:"rgba(0,0,0,0.5)",color:musicOn?"#fbbf24":"#666",fontSize:"0.75rem",fontFamily:"'Fredoka',sans-serif",fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,backdropFilter:"blur(4px)"}}><span style={{fontSize:"1rem"}}>{musicOn ? "🔊" : "🔇"}</span>{musicOn ? "Musique" : "Muet"}</button>
+
+      {/* FR / EN language toggle */}
+      <div style={{position:"fixed",top:10,left:10,zIndex:200,display:"flex",background:"rgba(0,0,0,0.5)",borderRadius:20,padding:3,border:"1px solid rgba(251,191,36,0.4)",backdropFilter:"blur(4px)"}}>
+        {[
+          { id:"fr", label:"🇫🇷 FR" },
+          { id:"en", label:"🇬🇧 EN" },
+        ].map(opt => {
+          const active = lang === opt.id;
+          return (
+            <button key={opt.id}
+              onClick={() => {
+                if (lang === opt.id) return;
+                setLang(opt.id); saveLang(opt.id);
+                // If current dictée is not available in the target lang, fall back to La famille
+                if (opt.id === "en" && !DICTEES_EN_ENABLED.has(selectedDictee)) {
+                  setSelectedDictee(LATEST_DICTEE); saveSelectedDictee(LATEST_DICTEE);
+                }
+              }}
+              style={{padding:"4px 10px",borderRadius:18,border:"none",
+                background: active ? (opt.id==="en" ? "linear-gradient(135deg,#3b82f6,#1d4ed8)" : "linear-gradient(135deg,#f59e0b,#d97706)") : "transparent",
+                color: active ? "#fff" : "#a3836a",
+                fontSize:"0.75rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",
+                boxShadow: active ? "0 2px 0 rgba(0,0,0,0.25)" : "none",
+                transition:"all 0.15s"
+              }}>{opt.label}</button>
+          );
+        })}
+      </div>
 
       {/* CREATURE UNLOCK MODAL */}
       {newCreature && (
@@ -1009,6 +1205,7 @@ export default function App() {
           <h1 style={{color:"#fbbf24",fontSize:"clamp(1.6rem,6vw,2.4rem)",textAlign:"center",textShadow:"0 2px 20px rgba(251,191,36,0.4)",marginBottom:4,lineHeight:1.2}}>L'Aventure des Mots</h1>
           <p style={{color:"#d4a574",marginBottom:4,fontSize:"1rem"}}>de Léo l'Explorateur</p>
           {nextCreature && <p style={{color:"#a3836a",fontSize:"0.8rem",marginBottom:4}}>Prochaine créature : {nextCreature.emoji} dans {nextCreature.at - totalWins} mot{nextCreature.at-totalWins>1?"s":""}</p>}
+<<<<<<< HEAD
           <p style={{color:"#6b5c4d",fontSize:"0.75rem",marginBottom:16}}>{totalWins} mots maîtrisés au total • {getUnlocked().size}/{CREATURES.length} créatures</p>
 
           {/* ── Sélecteur de dictée ── */}
@@ -1033,10 +1230,89 @@ export default function App() {
                   <span>{isSelected?"▶ ":""}{pack.label}</span>
                   <span style={{color:"#a3836a",fontSize:"0.75rem",fontWeight:400}}>{pack.words.length} mots</span>
                 </button>
+=======
+          <p style={{color:"#6b5c4d",fontSize:"0.75rem",marginBottom:20}}>{totalWins} mots maîtrisés au total • {getUnlocked().size}/{CREATURES.length} créatures</p>
+
+          <div style={{width:"100%",maxWidth:440,marginBottom:18}}>
+            <p style={{color:"#fbbf24",fontSize:"0.9rem",fontWeight:600,fontFamily:"'Fredoka',sans-serif",textAlign:"center",marginBottom:10}}>📖 Choisir une dictée :</p>
+            {DICTEE_NAMES.map((name, idx) => {
+              const isAll = name === "Toutes les dictées";
+              const isLatest = name === LATEST_DICTEE;
+              const stats = dicteeStats(name);
+              const isSelected = selectedDictee === name;
+              const isPerfect = stats.isPerfect;
+              const ids = isAll ? new Set(ALL_WORDS.map(w => w.id)) : (DICTEES[name] || new Set());
+              const todoCount = [...ids].filter(id => !mastered.has(id)).length;
+              const todoToggle = !!onlyTodo[name];
+              const isEnAvailable = lang !== "en" || isAll || DICTEES_EN_ENABLED.has(name);
+              const disabledForLang = !isEnAvailable;
+
+              return (
+                <div key={name} style={{ marginBottom: 10, opacity: disabledForLang ? 0.45 : 1 }}>
+                  <button
+                    disabled={disabledForLang}
+                    onClick={() => { if (disabledForLang) return; setSelectedDictee(name); saveSelectedDictee(name); }}
+                    style={{
+                      display:"flex",flexDirection:"column",alignItems:"stretch",gap:6,
+                      width:"100%",padding: isLatest ? "14px 18px" : "10px 16px",borderRadius:12,
+                      border: isPerfect
+                        ? (isSelected ? "2px solid #22c55e" : "1px solid rgba(34,197,94,0.5)")
+                        : (isSelected ? "2px solid #fbbf24" : "1px solid rgba(251,191,36,0.2)"),
+                      background: isPerfect
+                        ? "linear-gradient(135deg,rgba(34,197,94,0.18),rgba(22,163,74,0.10))"
+                        : (isSelected ? "linear-gradient(135deg,rgba(245,158,11,0.25),rgba(217,119,6,0.15))" : "rgba(30,20,10,0.4)"),
+                      color: isPerfect ? "#22c55e" : (isSelected ? "#fbbf24" : "#d4a574"),
+                      fontSize: isLatest ? "1rem" : "0.9rem",fontWeight: (isSelected || isLatest) ? 700 : 500,
+                      fontFamily:"'Fredoka',sans-serif",cursor:"pointer",
+                      boxShadow: isSelected ? "0 2px 12px rgba(251,191,36,0.25)" : "none",
+                      transition:"all 0.15s",textAlign:"left"
+                    }}
+                  >
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+                      <span style={{display:"flex",alignItems:"center",gap:6}}>
+                        {isPerfect ? "🏆" : (isAll ? "📚" : "📑")}
+                        <span>{name}</span>
+                        {isLatest && !isPerfect && !disabledForLang && <span style={{fontSize:"0.65rem",background:"#ef4444",color:"#fff",padding:"2px 6px",borderRadius:8,fontWeight:700}}>📌 À TRAVAILLER</span>}
+                        {isPerfect && <span style={{fontSize:"0.65rem",background:"#22c55e",color:"#fff",padding:"2px 6px",borderRadius:8,fontWeight:700}}>PARFAIT</span>}
+                        {disabledForLang && <span style={{fontSize:"0.65rem",background:"#3b82f6",color:"#fff",padding:"2px 6px",borderRadius:8,fontWeight:700}}>🔒 EN bientôt</span>}
+                      </span>
+                      <span style={{fontSize:"0.78rem",opacity:0.85,whiteSpace:"nowrap"}}>{stats.done}/{stats.total}</span>
+                    </div>
+                    {/* Mastery progress bar */}
+                    <div style={{width:"100%",height:6,background:"rgba(0,0,0,0.35)",borderRadius:4,overflow:"hidden"}}>
+                      <div style={{
+                        width: `${stats.total ? (stats.done / stats.total) * 100 : 0}%`,
+                        height:"100%",
+                        background: isPerfect ? "linear-gradient(90deg,#22c55e,#16a34a)" : "linear-gradient(90deg,#fbbf24,#f59e0b)",
+                        transition:"width 0.4s"
+                      }} />
+                    </div>
+                  </button>
+                  {/* Todo toggle (only when this dictée is selected and there's something to retrain) */}
+                  {isSelected && todoCount > 0 && todoCount < stats.total && (
+                    <button
+                      onClick={() => {
+                        const next = { ...onlyTodo, [name]: !todoToggle };
+                        setOnlyTodo(next); saveOnlyTodo(next);
+                      }}
+                      style={{
+                        marginTop:6,marginLeft:6,padding:"5px 10px",borderRadius:8,
+                        border: todoToggle ? "1px solid #ef4444" : "1px solid rgba(239,68,68,0.3)",
+                        background: todoToggle ? "rgba(239,68,68,0.18)" : "transparent",
+                        color: todoToggle ? "#ef4444" : "#a3836a",
+                        fontSize:"0.72rem",fontWeight:600,fontFamily:"'Fredoka',sans-serif",cursor:"pointer"
+                      }}
+                    >
+                      {todoToggle ? "✓ " : ""}🔁 Seulement à retravailler ({todoCount} mot{todoCount>1?"s":""})
+                    </button>
+                  )}
+                </div>
+>>>>>>> 5a324b0 (go)
               );
             })}
           </div>
 
+<<<<<<< HEAD
           {/* Avertissement dictée vide */}
           {packEmptyWarning && (
             <div style={{width:"90%",maxWidth:380,marginBottom:12,padding:"10px 14px",borderRadius:10,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",textAlign:"center"}}>
@@ -1044,6 +1320,8 @@ export default function App() {
             </div>
           )}
 
+=======
+>>>>>>> 5a324b0 (go)
           <button onClick={startGame} style={{padding:"16px 32px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.3rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 5px 0 #92400e,0 8px 30px rgba(245,158,11,0.3)",animation:"pulse 2s ease-in-out infinite"}}
             onMouseDown={e=>e.currentTarget.style.transform="translateY(3px)"} onMouseUp={e=>e.currentTarget.style.transform="translateY(0)"}
           >🗺️ Partir à l'aventure !</button>
@@ -1108,44 +1386,82 @@ export default function App() {
             <MapView currentWaypoint={mapWaypoint} completedWaypoints={completedWaypoints} onContinue={() => setShowFullMap(false)} isPreBoss={bossWord !== null} />
           ) : !showMap && (
             <div style={{background:isBoss?"linear-gradient(135deg,rgba(239,68,68,0.2),rgba(120,53,15,0.4))":"linear-gradient(135deg,rgba(120,53,15,0.4),rgba(30,20,10,0.6))",borderRadius:20,padding:"24px 18px",border:isBoss?"1px solid rgba(239,68,68,0.4)":"1px solid rgba(251,191,36,0.2)",animation:isBoss?"bossGlow 2s ease-in-out infinite":"slideUp 0.4s ease-out"}}>
-              {gameType==="scramble"&&<ScrambleGame key={currentIdx+"-s"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
-              {gameType==="write"&&<WriteGame key={currentIdx+"-w"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
-              {gameType==="listen"&&<ListenGame key={currentIdx+"-l"} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend}/>}
-              {gameType==="hangman"&&<HangmanGame key={currentIdx+"-h"+(bossWord?"-boss":"")} wordObj={currentWord} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} isBoss={isBoss}/>}
+              {gameType==="scramble"&&<ScrambleGame key={currentIdx+"-s-"+lang} wordObj={localizeWord(currentWord, lang)} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} voiceLang={voiceLang}/>}
+              {gameType==="write"&&<WriteGame key={currentIdx+"-w-"+lang} wordObj={localizeWord(currentWord, lang)} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} voiceLang={voiceLang}/>}
+              {gameType==="listen"&&<ListenGame key={currentIdx+"-l-"+lang} wordObj={localizeWord(currentWord, lang)} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} voiceLang={voiceLang}/>}
+              {gameType==="hangman"&&<HangmanGame key={currentIdx+"-h"+(bossWord?"-boss":"")+"-"+lang} wordObj={localizeWord(currentWord, lang)} onWin={handleWin} onFail={handleFail} score={score} onSpend={handleSpend} isBoss={isBoss} voiceLang={voiceLang}/>}
             </div>
           )}
         </div>
       )}
 
       {/* VICTORY */}
-      {screen === "victory" && (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:20,animation:"slideUp 0.8s ease-out",position:"relative"}}>
+      {screen === "victory" && (() => {
+        // Build mastered/todo word lists from sessionPlayedWords + sessionResults
+        const seenIds = new Set();
+        const playedUnique = sessionPlayedWords.filter(w => {
+          if (seenIds.has(w.id)) return false;
+          seenIds.add(w.id); return true;
+        });
+        const masteredList = playedUnique.filter(w => sessionResults[w.id] === "mastered");
+        const todoList = playedUnique.filter(w => sessionResults[w.id] !== "mastered");
+        const stats = dicteeStats(selectedDictee);
+        const isPerfectNow = !!justPerfectedDictee;
+        return (
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",minHeight:"100vh",padding:20,paddingTop:30,animation:"slideUp 0.8s ease-out",position:"relative"}}>
           <Fireworks onDone={() => {}} />
-          <div style={{maxWidth:400,width:"90%",marginBottom:16,borderRadius:16,overflow:"hidden",border:"3px solid #fbbf24",boxShadow:"0 8px 30px rgba(251,191,36,0.4)"}}>
-            <img src="/victory.png?v=2" alt="Victoire" style={{width:"100%",height:"auto",display:"block"}} onError={(e) => e.target.style.display = 'none'} />
+          {isPerfectNow && <Fireworks onDone={() => {}} />}
+          <div style={{fontSize:"3.5rem",marginBottom:6,animation:"float 2s ease-in-out infinite"}}>{isPerfectNow ? "🏆" : "🎉"}</div>
+          <h2 style={{color:"#fbbf24",fontSize:"1.6rem",textShadow:"0 2px 15px rgba(251,191,36,0.4)",marginBottom:6,textAlign:"center"}}>
+            {isPerfectNow ? `Dictée « ${selectedDictee} » parfaite !` : "Aventure terminée !"}
+          </h2>
+          {isPerfectNow && <p style={{color:"#22c55e",fontSize:"0.95rem",fontWeight:600,marginBottom:14,textAlign:"center"}}>✨ Tous les mots maîtrisés du premier coup ! ✨</p>}
+
+          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:14,padding:"14px 24px",marginBottom:14,border:"1px solid rgba(251,191,36,0.2)",textAlign:"center"}}>
+            <div style={{color:"#fbbf24",fontSize:"1.7rem",fontWeight:700,marginBottom:4}}>⭐ {score}</div>
+            <div style={{color:"#22c55e",fontSize:"0.85rem"}}>🔥 Meilleure série : {maxStreak}</div>
+            <div style={{color:"#a3836a",fontSize:"0.8rem",marginTop:4}}>Dictée « {selectedDictee} » : {stats.done}/{stats.total} mots maîtrisés</div>
           </div>
-          <div style={{fontSize:"4rem",marginBottom:10,animation:"float 2s ease-in-out infinite"}}>🏆</div>
-          <h2 style={{color:"#fbbf24",fontSize:"1.8rem",textShadow:"0 2px 15px rgba(251,191,36,0.4)",marginBottom:8}}>Trésor trouvé !</h2>
-          <p style={{color:"#d4a574",marginBottom:16,textAlign:"center",maxWidth:280}}>Bravo Léo ! Aventure terminée !</p>
-          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:16,padding:"18px 28px",marginBottom:16,border:"1px solid rgba(251,191,36,0.2)",textAlign:"center"}}>
-            <div style={{color:"#fbbf24",fontSize:"2rem",fontWeight:700,marginBottom:6}}>⭐ {score}</div>
-            <div style={{color:"#d4a574",fontSize:"0.9rem",marginBottom:3}}>{wordsLearned.size} mots maîtrisés</div>
-            <div style={{color:"#22c55e",fontSize:"0.9rem"}}>🔥 Meilleure série : {maxStreak}</div>
-            <div style={{color:"#a3836a",fontSize:"0.85rem",marginTop:6}}>Total : {totalWins} mots • {getUnlocked().size} créatures</div>
-          </div>
-          <div style={{background:"rgba(0,0,0,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:20,width:"90%",maxWidth:400,maxHeight:200,overflowY:"auto",border:"1px solid rgba(251,191,36,0.15)"}}>
-            <p style={{color:"#fbbf24",fontSize:"0.85rem",fontWeight:600,marginBottom:10,textAlign:"center"}}>📚 Tous les mots de l'aventure :</p>
-            {sessionPlayedWords.map((w, i) => (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                <span style={{color: wordsLearned.has(w.word) ? "#22c55e" : "#ef4444",fontSize:"0.85rem"}}>{wordsLearned.has(w.word) ? "✓" : "✗"}</span>
-                <span style={{color:"#fff",fontSize:"0.85rem",fontWeight:600}}>{w.word}</span>
-                <span style={{color:"#a3836a",fontSize:"0.7rem",fontStyle:"italic"}}>— {w.hint}</span>
+
+          {masteredList.length > 0 && (
+            <div style={{background:"rgba(34,197,94,0.08)",borderRadius:12,padding:"12px 14px",marginBottom:10,width:"95%",maxWidth:440,border:"1px solid rgba(34,197,94,0.3)"}}>
+              <p style={{color:"#22c55e",fontSize:"0.9rem",fontWeight:600,marginBottom:8,textAlign:"center"}}>✅ Maîtrisés du premier coup ({masteredList.length})</p>
+              <div style={{maxHeight:140,overflowY:"auto"}}>
+                {masteredList.map(w => (
+                  <div key={w.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                    <span style={{color:"#22c55e",fontSize:"0.85rem"}}>✓</span>
+                    <span style={{color:"#fff",fontSize:"0.85rem",fontWeight:600}}>{w.prefix||""}{w.word}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+
+          {todoList.length > 0 && (
+            <div style={{background:"rgba(239,68,68,0.08)",borderRadius:12,padding:"12px 14px",marginBottom:14,width:"95%",maxWidth:440,border:"1px solid rgba(239,68,68,0.3)"}}>
+              <p style={{color:"#ef4444",fontSize:"0.9rem",fontWeight:600,marginBottom:8,textAlign:"center"}}>� À retravailler ({todoList.length})</p>
+              <div style={{maxHeight:140,overflowY:"auto"}}>
+                {todoList.map(w => (
+                  <div key={w.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                    <span style={{color:"#ef4444",fontSize:"0.85rem"}}>✗</span>
+                    <span style={{color:"#fff",fontSize:"0.85rem",fontWeight:600}}>{w.prefix||""}{w.word}</span>
+                    <span style={{color:"#a3836a",fontSize:"0.7rem",fontStyle:"italic",marginLeft:"auto"}}>— {w.hint}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center",marginBottom:8}}>
+            {todoList.length > 0 && (
+              <button onClick={startGameTodoOnly} style={{padding:"12px 22px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",fontSize:"0.95rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 4px 0 #991b1b"}}>🔁 Rejouer les mots à retravailler</button>
+            )}
+            <button onClick={startGame} style={{padding:"12px 22px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"0.95rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 4px 0 #92400e"}}>🗺️ Nouvelle aventure</button>
+            <button onClick={() => setScreen("title")} style={{padding:"12px 22px",borderRadius:12,border:"1px solid rgba(251,191,36,0.4)",background:"transparent",color:"#fbbf24",fontSize:"0.9rem",fontWeight:600,fontFamily:"'Fredoka',sans-serif",cursor:"pointer"}}>🏠 Retour</button>
           </div>
-          <button onClick={startGame} style={{padding:"14px 32px",borderRadius:14,border:"none",background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#451a03",fontSize:"1.1rem",fontWeight:700,fontFamily:"'Fredoka',sans-serif",cursor:"pointer",boxShadow:"0 4px 0 #92400e"}}>🗺️ Nouvelle aventure !</button>
         </div>
-      )}
+        );
+      })()}
 
       {/* GAME OVER */}
       {screen === "gameover" && (
