@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 const ALL_WORDS = [
   { id:"siecle", word:"siècle", game:"siècle", hint:"C’est très, très long : 100 ans.", tip:"Ça commence par le son [s] écrit avec S, pas avec C. On entend « siè » au début, avec un accent grave : è." },
   { id:"humain", word:"humain", game:"humain", hint:"Une personne, pas un animal.", tip:"Ça commence par HU. Au milieu, on entend « main » comme la main du corps. Pas de E à la fin." },
-  { id:"vers", word:"vers", game:"vers", hint:"Je vais ___ l’école.", tip:"C’est le mot de direction. Il finit par S. Attention à ne pas écrire vert ou ver." },
-  { id:"voguer", word:"voguer", game:"voguer", hint:"Avancer doucement sur l’eau en bateau.", tip:"Ça commence par VO. Pour garder le son [g], il faut mettre U après le G." },
-  { id:"naviguer", word:"naviguer", game:"naviguer", hint:"Conduire un bateau sur la mer.", tip:"On entend [g] avant le son « é ». Pour garder ce son, il faut GU." },
-  { id:"permettre", word:"permettre", game:"permettre", hint:"Dire oui, autoriser.", tip:"On retrouve le mot « mettre » dedans. Comme « mettre », il y a deux T." },
+  { id:"vers", word:"vers", game:"vers", hint:"Je vais ___ l’école.", form:"préposition (vers, pas vert / ver)", tip:"C’est le mot de direction. Il finit par S. Attention à ne pas écrire vert ou ver." },
+  { id:"voguer", word:"voguer", game:"voguer", hint:"Avancer doucement sur l’eau en bateau.", form:"verbe à l'infinitif", tip:"Ça commence par VO. Pour garder le son [g], il faut mettre U après le G." },
+  { id:"naviguer", word:"naviguer", game:"naviguer", hint:"Conduire un bateau sur la mer.", form:"verbe à l'infinitif", tip:"On entend [g] avant le son « é ». Pour garder ce son, il faut GU." },
+  { id:"permettre", word:"permettre", game:"permettre", hint:"Dire oui, autoriser.", form:"verbe à l'infinitif", tip:"On retrouve le mot « mettre » dedans. Comme « mettre », il y a deux T." },
   { id:"atravers", word:"à travers", game:"travers", hint:"Passer d’un côté à l’autre, par exemple dans une forêt.", prefix:"à ", tip:"D’abord le petit mot « à » avec accent. Ensuite, le deuxième mot finit par S." },
-  { id:"celebre", word:"célèbre", game:"célèbre", hint:"Très connu, comme une grande star.", tip:"Il y a 2 accents. Le premier sonne É, le second sonne È." },
-  { id:"representer", word:"représenter", game:"représenter", hint:"Parler ou agir à la place de quelqu’un.", tip:"Le début ressemble à « re-pré ». On retrouve presque le mot « présent » à l’intérieur." },
+  { id:"celebre", word:"célèbre", game:"célèbre", hint:"Très connu, comme une grande star.", form:"adjectif au singulier", tip:"Il y a 2 accents. Le premier sonne É, le second sonne È." },
+  { id:"representer", word:"représenter", game:"représenter", hint:"Parler ou agir à la place de quelqu’un.", form:"verbe à l'infinitif", tip:"Le début ressemble à « re-pré ». On retrouve presque le mot « présent » à l’intérieur." },
   { id:"pourquoi", word:"pourquoi", game:"pourquoi", hint:"Le mot qu’on dit pour demander la raison.", tip:"C’est comme deux petits mots collés : « pour » puis « quoi »." },
   { id:"voici", word:"voici", game:"voici", hint:"Mot qu’on dit pour montrer quelque chose près de soi.", tip:"Le début fait penser à « voir ». La fin fait penser à « ici »." },
   { id:"parceque", word:"parce que", game:"parce que", hint:"C’est le début d’une réponse à « pourquoi ? »", tip:"Ce n’est pas un seul mot. Il faut en écrire 2." },
@@ -23,23 +23,23 @@ const ALL_WORDS = [
   { id:"beaucoup", word:"beaucoup", game:"beaucoup", hint:"Le contraire de « un peu ».", tip:"On entend « beau » au début. Le mot finit par COUP, sans S à la fin." },
   { id:"geographie", word:"géographie", game:"géographie", hint:"La matière de l’école qui parle des pays, des cartes et de la Terre.", tip:"Le début fait « géo ». Plus loin, le son [f] s’écrit PH." },
   { id:"louest", word:"l'ouest", game:"ouest", hint:"Le côté où le soleil se couche.", prefix:"l'", tip:"Le mot commence par OU. Il faut penser à « west » en anglais pour la fin." },
-  { id:"fascinant", word:"fascinant", game:"fascinant", hint:"Tellement intéressant qu’on a du mal à regarder ailleurs.", tip:"Au milieu, le son [s] s’écrit SC. Le mot finit par -ant." },
+  { id:"fascinant", word:"fascinant", game:"fascinant", hint:"Tellement intéressant qu’on a du mal à regarder ailleurs.", form:"adjectif masculin singulier", tip:"Au milieu, le son [s] s’écrit SC. Le mot finit par -ant." },
   { id:"musee", word:"musée", game:"musée", hint:"Un lieu où l’on va voir des tableaux, des statues ou des objets anciens.", tip:"Le mot finit par le son « é », écrit avec É puis un E muet juste après." },
-  { id:"surplomber", word:"surplomber", game:"surplomber", hint:"Être placé plus haut que quelque chose.", tip:"Le mot commence par SUR. On retrouve « plomb » dedans, avec un B qu’on n’entend pas." },
+  { id:"surplomber", word:"surplomber", game:"surplomber", hint:"Être placé plus haut que quelque chose.", form:"verbe à l'infinitif", tip:"Le mot commence par SUR. On retrouve « plomb » dedans, avec un B qu’on n’entend pas." },
   { id:"lumiere", word:"lumière", game:"lumière", hint:"Ce qu’allume une lampe dans une pièce sombre.", tip:"Le début est LU. Au milieu, il y a un È avec accent grave." },
-  { id:"plusieurs", word:"plusieurs", game:"plusieurs", hint:"Plus d’un.", tip:"Le mot commence par PLUS. Il faut garder le S de la fin." },
-  { id:"voler", word:"voler", game:"voler", hint:"Ce que font les oiseaux dans le ciel.", tip:"Le début est VOL, comme dans « un vol d’oiseau »." },
-  { id:"ouvert", word:"ouvert", game:"ouvert", hint:"Le contraire de « fermé ».", tip:"Ça commence par OUV. À la fin, on entend presque « air », mais ça s’écrit avec ER puis T." },
-  { id:"fermer", word:"fermer", game:"fermer", hint:"Le contraire de « ouvrir ».", tip:"Le début est FERM, comme dans « fermeture »." },
+  { id:"plusieurs", word:"plusieurs", game:"plusieurs", hint:"Plus d’un.", form:"adjectif pluriel", tip:"Le mot commence par PLUS. Il faut garder le S de la fin." },
+  { id:"voler", word:"voler", game:"voler", hint:"Ce que font les oiseaux dans le ciel.", form:"verbe à l'infinitif", tip:"Le début est VOL, comme dans « un vol d’oiseau »." },
+  { id:"ouvert", word:"ouvert", game:"ouvert", hint:"Le contraire de « fermé ».", form:"participe passé, masc. singulier", tip:"Ça commence par OUV. À la fin, on entend presque « air », mais ça s’écrit avec ER puis T." },
+  { id:"fermer", word:"fermer", game:"fermer", hint:"Le contraire de « ouvrir ».", form:"verbe à l'infinitif", tip:"Le début est FERM, comme dans « fermeture »." },
   { id:"escalier", word:"escalier", game:"escalier", hint:"Une suite de marches pour monter ou descendre.", tip:"Le début est ESCA. La fin s’écrit -IER." },
   { id:"enfin", word:"enfin", game:"enfin", hint:"Le mot qu’on dit quand on a trop attendu.", tip:"Le mot commence par EN. À la fin, le son nasal s’écrit IN." },
   { id:"soleil", word:"soleil", game:"soleil", hint:"Il brille dans le ciel pendant la journée.", tip:"Le début est SOL. La fin s’écrit -EIL, comme dans sommeil." },
-  { id:"chauffer", word:"chauffer", game:"chauffer", hint:"Rendre plus chaud.", tip:"Le début vient de « chaud ». Attention, il y a deux F." },
+  { id:"chauffer", word:"chauffer", game:"chauffer", hint:"Rendre plus chaud.", form:"verbe à l'infinitif", tip:"Le début vient de « chaud ». Attention, il y a deux F." },
   { id:"sommeil", word:"sommeil", game:"sommeil", hint:"Ce qu’on a quand on bâille et qu’on veut dormir.", prefix:"le ", tip:"Il y a deux M. La fin s’écrit -EIL, comme dans soleil." },
-  { id:"bourgeons", word:"bourgeons", game:"bourgeons", hint:"Petites boules sur les branches avant les feuilles.", prefix:"les ", tip:"Au milieu, le son [j] s’écrit GE. À la fin, comme il y en a plusieurs, il faut un S." },
-  { id:"gazouiller", word:"gazouiller", game:"gazouiller", hint:"Faire de petits chants d’oiseaux.", tip:"Le début est GAZOU. À la fin, il faut deux L avant ER." },
-  { id:"ecureuils", word:"écureuils", game:"écureuils", hint:"Petits animaux qui grimpent aux arbres et cachent des noisettes.", prefix:"les ", tip:"Le mot commence par ÉCU. La fin s’écrit -EUILS." },
-  { id:"sautiller", word:"sautiller", game:"sautiller", hint:"Faire plein de petits sauts.", tip:"Le début vient de « saut ». À la fin, il faut deux L avant ER." },
+  { id:"bourgeons", word:"bourgeons", game:"bourgeons", hint:"Petites boules sur les branches avant les feuilles.", prefix:"les ", form:"au pluriel", tip:"Au milieu, le son [j] s’écrit GE. À la fin, comme il y en a plusieurs, il faut un S." },
+  { id:"gazouiller", word:"gazouiller", game:"gazouiller", hint:"Faire de petits chants d’oiseaux.", form:"verbe à l'infinitif", tip:"Le début est GAZOU. À la fin, il faut deux L avant ER." },
+  { id:"ecureuils", word:"écureuils", game:"écureuils", hint:"Petits animaux qui grimpent aux arbres et cachent des noisettes.", prefix:"les ", form:"au pluriel", tip:"Le mot commence par ÉCU. La fin s’écrit -EUILS." },
+  { id:"sautiller", word:"sautiller", game:"sautiller", hint:"Faire plein de petits sauts.", form:"verbe à l'infinitif", tip:"Le début vient de « saut ». À la fin, il faut deux L avant ER." },
   { id:"maison", word:"maison", game:"maison", hint:"L’endroit où habite une famille.", tip:"Au début, on entend « mai ». À la fin, le son nasal s’écrit ON." },
   // ─── La famille ───
   { id:"membre", word:"membre", game:"membre", prefix:"un ", hint:"Quelqu'un qui fait partie d'un groupe ou d'une famille.", tip:"Au milieu, il y a BR. Le mot finit par RE." },
@@ -58,22 +58,22 @@ const ALL_WORDS = [
   { id:"origine", word:"origine", game:"origine", prefix:"l'", hint:"Le point de départ, d'où vient quelqu'un.", tip:"Le début est ORI. On retrouve un G avant la fin -INE." },
   { id:"pere", word:"père", game:"père", prefix:"le ", hint:"Le papa d'un enfant.", tip:"Court : P puis È puis RE. L'accent est grave." },
   { id:"mere", word:"mère", game:"mère", prefix:"la ", hint:"La maman d'un enfant.", tip:"Court : M puis È puis RE. L'accent est grave." },
-  { id:"grandsparents", word:"grands-parents", game:"grands-parents", prefix:"les ", hint:"Le papa et la maman de ton père ou de ta mère.", tip:"Deux mots reliés par un trait d'union. Le premier finit par DS." },
-  { id:"cote", word:"côté", game:"côté", prefix:"le ", hint:"La partie gauche ou droite de quelque chose.", tip:"Il y a un accent circonflexe sur le Ô. La fin s'écrit É." },
-  { id:"voir", word:"voir", game:"voir", hint:"Utiliser ses yeux pour percevoir quelque chose.", tip:"Court : V, O, I, R. Juste 4 lettres." },
-  { id:"tenir", word:"tenir", game:"tenir", hint:"Garder quelque chose dans ses mains.", tip:"Ça commence par TEN. La fin est IR." },
-  { id:"tracer", word:"tracer", game:"tracer", hint:"Dessiner une ligne ou un trait.", tip:"Ça commence par TRA. Le son [s] devant le E s'écrit avec C." },
-  { id:"reconnaitre", word:"reconnaître", game:"reconnaître", hint:"Identifier quelqu'un qu'on a déjà vu.", tip:"Le début est RE + CON + NAÎ. Le Î prend un accent circonflexe. La fin est TRE." },
-  { id:"petit", word:"petit", game:"petit", hint:"Le contraire de grand.", tip:"Le mot finit par IT avec un T muet." },
-  { id:"genealogique", word:"généalogique", game:"généalogique", hint:"Qui parle de la famille et de ses origines (arbre ___).", tip:"Ça commence par GÉ. Au milieu, on retrouve ALOGIQUE." },
-  { id:"represente", word:"représenté", game:"représenté", hint:"Montré ou dessiné sur quelque chose.", tip:"Le début est RE-PRÉ. On retrouve presque présent dedans. La fin est É." },
-  { id:"maternel", word:"maternel", game:"maternel", hint:"Qui vient du côté de la mère.", tip:"Le début est MATER. La fin est NEL." },
-  { id:"paternel", word:"paternel", game:"paternel", hint:"Qui vient du côté du père.", tip:"Le début est PATER. La fin est NEL." },
+  { id:"grandsparents", word:"grands-parents", game:"grands-parents", prefix:"les ", hint:"Le papa et la maman de ton père ou de ta mère.", form:"au pluriel, avec trait d'union", tip:"Deux mots reliés par un trait d'union. Le premier finit par DS." },
+  { id:"cote", word:"côté", game:"côté", prefix:"le ", hint:"La partie gauche ou droite de quelque chose.", form:"nom masc. singulier (pas coté / coter)", tip:"Il y a un accent circonflexe sur le Ô. La fin s'écrit É." },
+  { id:"voir", word:"voir", game:"voir", hint:"Utiliser ses yeux pour percevoir quelque chose.", form:"verbe à l'infinitif", tip:"Court : V, O, I, R. Juste 4 lettres." },
+  { id:"tenir", word:"tenir", game:"tenir", hint:"Garder quelque chose dans ses mains.", form:"verbe à l'infinitif", tip:"Ça commence par TEN. La fin est IR." },
+  { id:"tracer", word:"tracer", game:"tracer", hint:"Dessiner une ligne ou un trait.", form:"verbe à l'infinitif", tip:"Ça commence par TRA. Le son [s] devant le E s'écrit avec C." },
+  { id:"reconnaitre", word:"reconnaître", game:"reconnaître", hint:"Identifier quelqu'un qu'on a déjà vu.", form:"verbe à l'infinitif", tip:"Le début est RE + CON + NAÎ. Le Î prend un accent circonflexe. La fin est TRE." },
+  { id:"petit", word:"petit", game:"petit", hint:"Le contraire de grand.", form:"adjectif masc. singulier", tip:"Le mot finit par IT avec un T muet." },
+  { id:"genealogique", word:"généalogique", game:"généalogique", hint:"Qui parle de la famille et de ses origines (arbre ___).", form:"adjectif au singulier", tip:"Ça commence par GÉ. Au milieu, on retrouve ALOGIQUE." },
+  { id:"represente", word:"représenté", game:"représenté", hint:"Montré ou dessiné sur quelque chose.", form:"participe passé, masc. singulier", tip:"Le début est RE-PRÉ. On retrouve presque présent dedans. La fin est É." },
+  { id:"maternel", word:"maternel", game:"maternel", hint:"Qui vient du côté de la mère.", form:"adjectif masc. singulier", tip:"Le début est MATER. La fin est NEL." },
+  { id:"paternel", word:"paternel", game:"paternel", hint:"Qui vient du côté du père.", form:"adjectif masc. singulier", tip:"Le début est PATER. La fin est NEL." },
   { id:"autour", word:"autour", game:"autour", hint:"Tout ce qui entoure quelque chose, de tous les côtés.", tip:"On peut le couper : AU + TOUR. La fin est OUR." },
   { id:"dans", word:"dans", game:"dans", hint:"À l'intérieur de quelque chose.", tip:"Petit mot de 4 lettres. La fin s'écrit ANS." },
-  { id:"mais", word:"mais", game:"mais", hint:"Mot pour opposer deux idées.", tip:"Petit mot de 4 lettres. La fin s'écrit AIS." },
+  { id:"mais", word:"mais", game:"mais", hint:"Mot pour opposer deux idées.", form:"conjonction (mais, pas mai / mets)", tip:"Petit mot de 4 lettres. La fin s'écrit AIS." },
   { id:"entre", word:"entre", game:"entre", hint:"Au milieu de deux choses.", tip:"Le début est EN. La fin est TRE." },
-  { id:"pres", word:"près", game:"près", hint:"Le contraire de loin.", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
+  { id:"pres", word:"près", game:"près", hint:"Le contraire de loin.", form:"adverbe (près, pas prêt)", tip:"Il y a un accent grave sur le È. Le mot finit par S." },
   { id:"ilya", word:"il y a", game:"il y a", hint:"Ce qu'on dit pour indiquer que quelque chose existe.", tip:"Ce sont trois petits mots : IL, Y et A." },
 ];
 
@@ -651,7 +651,7 @@ function WriteGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR"
 
   const submit = () => {
     if(!input.trim()) return;
-    const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ");
+    const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ").replace(/œ/g,"oe").replace(/æ/g,"ae");
     if(norm(input)===norm(target)||norm(input)===norm(wordObj.word)) { setStatus("win"); setTimeout(()=>onWin(),300); }
     else { setStatus("fail"); setShowTip(true); setBoughtTip(true); setShowAnswer(true); onFail(); setTimeout(()=>{setStatus(null);setInput("");setShowAnswer(false);},1500); }
   };
@@ -664,6 +664,7 @@ function WriteGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR"
         <SoundButton word={wordObj.word} size={32} lang={voiceLang}/>
         {!boughtTip && <PaidHintButton label="💡" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>}
       </div>
+      {wordObj.form && <p style={{color:"#60a5fa",fontSize:"0.75rem",margin:"0 0 6px",fontWeight:600}}>📏 {wordObj.form}</p>}
       {showTip && <TipBox text={wordObj.tip}/>}
       {prefix && <p style={{color:"#fbbf24",fontSize:"0.9rem",marginTop:8,marginBottom:2}}>Le mot commence par : <strong>{prefix}</strong>___</p>}
       <div style={{display:"flex",justifyContent:"center",gap:8,marginTop:12,animation:status==="fail"?"headShake 0.5s":status==="win"?"tada 0.8s":"none"}}>
@@ -683,13 +684,14 @@ function ListenGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR
   const [boughtTip,setBoughtTip]=useState(false); const [showTip,setShowTip]=useState(false);
   useEffect(()=>{const t=setTimeout(()=>speakWord(wordObj.word, voiceLang),400);return()=>clearTimeout(t);},[wordObj.word, voiceLang]);
   const submit=()=>{
-    if(!input.trim())return;const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ");
+    if(!input.trim())return;const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ").replace(/œ/g,"oe").replace(/æ/g,"ae");
     if(norm(input)===norm(wordObj.word)||norm(input)===norm(wordObj.game)){setStatus("win");setTimeout(()=>onWin(),300);}
     else{setStatus("fail");setRevealed(true);setShowTip(true);setBoughtTip(true);onFail();setTimeout(()=>{setStatus(null);setInput("");setRevealed(false);},1500);}
   };
   return (
     <div style={{textAlign:"center"}}>
       <h3 style={{color:"#fbbf24",fontFamily:"'Fredoka',sans-serif",fontSize:"1.1rem",marginBottom:6}}>👂 Écoute et écris !</h3>
+      {wordObj.form && <p style={{color:"#60a5fa",fontSize:"0.8rem",margin:"0 0 6px",fontWeight:600}}>📏 {wordObj.form}</p>}
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:10,flexWrap:"wrap"}}>
         {!boughtTip && <PaidHintButton label="💡 Astuce" cost={10} score={score} disabled={boughtTip} onBuy={()=>{onSpend(10);setBoughtTip(true);setShowTip(true);}}/>}
       </div>
@@ -708,7 +710,7 @@ function ListenGame({ wordObj, onWin, onFail, score, onSpend, voiceLang = "fr-FR
 const HP=[(c)=>{c.beginPath();c.arc(150,55,16,0,Math.PI*2);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,71);c.lineTo(150,120);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,85);c.lineTo(125,105);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,85);c.lineTo(175,105);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,120);c.lineTo(130,150);c.stroke();},(c)=>{c.beginPath();c.moveTo(150,120);c.lineTo(170,150);c.stroke();},(c)=>{c.beginPath();c.moveTo(143,50);c.lineTo(147,54);c.stroke();c.beginPath();c.moveTo(147,50);c.lineTo(143,54);c.stroke();},(c)=>{c.beginPath();c.moveTo(153,50);c.lineTo(157,54);c.stroke();c.beginPath();c.moveTo(157,50);c.lineTo(153,54);c.stroke();c.beginPath();c.arc(150,65,5,0,Math.PI,true);c.stroke();}];
 
 function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss, voiceLang = "fr-FR" }) {
-  const gw=wordObj.game.normalize("NFC").toLowerCase(); const prefix=wordObj.prefix||"";
+  const gw=wordObj.game.normalize("NFC").toLowerCase().replace(/œ/g,"oe").replace(/æ/g,"ae"); const prefix=wordObj.prefix||"";
   const unique=useMemo(()=>new Set([...gw.replace(/\s/g,"")]),[gw]);
   const [guessed,setGuessed]=useState(new Set()); const [errors,setErrors]=useState(0); const [status,setStatus]=useState(null);
   const [boughtHint,setBoughtHint]=useState(false); const [boughtSound,setBoughtSound]=useState(false); const [boughtTip,setBoughtTip]=useState(false); const [showTip,setShowTip]=useState(false);
@@ -746,6 +748,105 @@ function HangmanGame({ wordObj, onWin, onFail, score, onSpend, isBoss, voiceLang
   );
 }
 
+// ─── PARENT PANEL ───
+const PARENT_PASSWORD = "AATNAEL2009!";
+
+function ParentPanel({ onBack }) {
+  const [mastered, setMasteredState] = useState(getMastered());
+  const [filter, setFilter] = useState("all"); // 'all' | 'mastered' | 'todo'
+
+  const toggle = (id) => {
+    const next = new Set(mastered);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setMasteredState(next); saveMastered(next);
+    // If a word just got un-mastered, also invalidate any "dicteePerfect" flag that contains it
+    if (!next.has(id)) {
+      const perfect = getDicteePerfect();
+      let changed = false;
+      for (const [name, ids] of Object.entries(DICTEES)) {
+        if (ids.has(id) && perfect.has(name)) { perfect.delete(name); changed = true; }
+      }
+      if (changed) saveDicteePerfect(perfect);
+    }
+  };
+
+  const setAll = (value) => {
+    const next = new Set(mastered);
+    ALL_WORDS.forEach(w => { if (value) next.add(w.id); else next.delete(w.id); });
+    setMasteredState(next); saveMastered(next);
+    if (!value) {
+      // Un-mastering everything wipes all "perfect dictée" flags
+      saveDicteePerfect(new Set());
+    }
+  };
+
+  const matchesFilter = (w) => {
+    if (filter === "all") return true;
+    const isMastered = mastered.has(w.id);
+    return filter === "mastered" ? isMastered : !isMastered;
+  };
+
+  return (
+    <div style={{ padding: 20, maxWidth: 520, margin: "0 auto" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "1rem", cursor: "pointer", fontFamily: "'Fredoka',sans-serif", marginBottom: 10 }}>← Retour</button>
+      <h2 style={{ color: "#fbbf24", fontFamily: "'Fredoka',sans-serif", fontSize: "1.3rem", marginBottom: 4 }}>🔒 Panneau parent</h2>
+      <p style={{ color: "#a3836a", fontSize: "0.8rem", marginBottom: 14 }}>Marque chaque mot comme <strong style={{color:"#22c55e"}}>connu</strong> ✅ ou <strong style={{color:"#ef4444"}}>à retravailler</strong> ❌.</p>
+
+      {/* Filter pills */}
+      <div style={{ display:"flex", gap:6, marginBottom:10, flexWrap:"wrap" }}>
+        {[
+          { id:"all", label:"Tous" },
+          { id:"todo", label:"À retravailler" },
+          { id:"mastered", label:"Connus" },
+        ].map(f => (
+          <button key={f.id} onClick={() => setFilter(f.id)}
+            style={{ padding:"5px 11px", borderRadius:16, border: filter===f.id ? "2px solid #fbbf24" : "1px solid rgba(251,191,36,0.25)", background: filter===f.id ? "rgba(251,191,36,0.18)" : "transparent", color: filter===f.id ? "#fbbf24" : "#a3836a", fontSize:"0.75rem", fontWeight:600, fontFamily:"'Fredoka',sans-serif", cursor:"pointer" }}>{f.label}</button>
+        ))}
+        <div style={{ flex:1 }} />
+        <button onClick={() => setAll(true)} style={{ padding:"5px 11px", borderRadius:16, border:"1px solid rgba(34,197,94,0.35)", background:"transparent", color:"#22c55e", fontSize:"0.72rem", fontWeight:600, fontFamily:"'Fredoka',sans-serif", cursor:"pointer" }}>Tout connu</button>
+        <button onClick={() => setAll(false)} style={{ padding:"5px 11px", borderRadius:16, border:"1px solid rgba(239,68,68,0.35)", background:"transparent", color:"#ef4444", fontSize:"0.72rem", fontWeight:600, fontFamily:"'Fredoka',sans-serif", cursor:"pointer" }}>Tout reset</button>
+      </div>
+
+      <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+        {DICTEE_ORDER.map(dicteeName => {
+          const ids = DICTEES[dicteeName];
+          const words = ALL_WORDS.filter(w => ids.has(w.id) && matchesFilter(w));
+          if (words.length === 0) return null;
+          const total = ids.size;
+          const done = [...ids].filter(id => mastered.has(id)).length;
+          return (
+            <div key={dicteeName} style={{ marginBottom: 14 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6, padding:"0 4px" }}>
+                <h3 style={{ color:"#fbbf24", fontFamily:"'Fredoka',sans-serif", fontSize:"0.95rem", margin:0 }}>📑 {dicteeName}</h3>
+                <span style={{ color:"#a3836a", fontSize:"0.75rem" }}>{done}/{total} connus</span>
+              </div>
+              {words.map(w => {
+                const isMastered = mastered.has(w.id);
+                return (
+                  <div key={w.id} onClick={() => toggle(w.id)}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 12px", borderRadius:10, marginBottom:4, cursor:"pointer",
+                      background: isMastered ? "rgba(34,197,94,0.10)" : "rgba(239,68,68,0.08)",
+                      border: isMastered ? "1px solid rgba(34,197,94,0.35)" : "1px solid rgba(239,68,68,0.25)",
+                      transition:"all 0.2s" }}>
+                    <div style={{ width:28, height:28, borderRadius:6, background: isMastered ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.85rem", flexShrink:0 }}>
+                      {isMastered ? "✅" : "❌"}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <span style={{ color: isMastered ? "#22c55e" : "#fbbf24", fontWeight:600, fontFamily:"'Fredoka',sans-serif", fontSize:"0.95rem" }}>{w.prefix || ""}{w.game}</span>
+                      {WORDS_EN[w.id] && <span style={{ color:"#3b82f6", fontSize:"0.7rem", marginLeft:8 }}>🇬🇧 {WORDS_EN[w.id].word}</span>}
+                    </div>
+                    <span style={{ color:"#a3836a", fontSize:"0.7rem", fontStyle:"italic" }}>— {w.hint}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── SETTINGS SCREEN ───
 function Settings({ onBack }) {
   const [disabled, setDisabled] = useState(getDisabled());
@@ -756,6 +857,17 @@ function Settings({ onBack }) {
     setDisabled(next); saveDisabled(next);
   };
   const unlocked = getUnlocked();
+
+  // Parent panel gating
+  const [parentOpen, setParentOpen] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+  const tryUnlock = () => {
+    if (pwInput === PARENT_PASSWORD) { setParentOpen(true); setPwError(false); setPwInput(""); }
+    else { setPwError(true); }
+  };
+
+  if (parentOpen) return <ParentPanel onBack={() => setParentOpen(false)} />;
   return (
     <div style={{ padding: 20, maxWidth: 500, margin: "0 auto" }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "1rem", cursor: "pointer", fontFamily: "'Fredoka',sans-serif", marginBottom: 16 }}>← Retour</button>
@@ -791,6 +903,24 @@ function Settings({ onBack }) {
             </div>
           );
         })}
+      </div>
+
+      {/* Parent Panel (password-gated) */}
+      <div style={{ marginTop: 28, padding: 14, borderRadius: 12, border: "1px dashed rgba(251,191,36,0.3)", background: "rgba(0,0,0,0.2)" }}>
+        <h3 style={{ color: "#fbbf24", fontFamily: "'Fredoka',sans-serif", fontSize: "1rem", margin: "0 0 4px" }}>🔒 Panneau parent</h3>
+        <p style={{ color: "#a3836a", fontSize: "0.75rem", margin: "0 0 10px" }}>Réservé au parent : gère la liste des mots connus / à retravailler.</p>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            type="password"
+            value={pwInput}
+            onChange={e => { setPwInput(e.target.value); setPwError(false); }}
+            onKeyDown={e => e.key === "Enter" && tryUnlock()}
+            placeholder="Mot de passe parent"
+            style={{ flex: 1, minWidth: 160, padding: "8px 12px", borderRadius: 10, border: pwError ? "2px solid #ef4444" : "1px solid rgba(251,191,36,0.35)", background: "rgba(0,0,0,0.3)", color: "#fff", fontSize: "0.9rem", fontFamily: "'Fredoka',sans-serif", outline: "none" }}
+          />
+          <button onClick={tryUnlock} style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#451a03", fontWeight: 700, fontFamily: "'Fredoka',sans-serif", cursor: "pointer", boxShadow: "0 3px 0 #92400e" }}>Ouvrir</button>
+        </div>
+        {pwError && <p style={{ color: "#ef4444", fontSize: "0.75rem", marginTop: 6, marginBottom: 0 }}>Mot de passe incorrect.</p>}
       </div>
     </div>
   );
@@ -838,6 +968,19 @@ export default function App() {
   // Language mode (fr / en) for the whole app
   const [lang, setLang] = useState(getLang());
   const voiceLang = lang === "en" ? "en-US" : "fr-FR";
+
+  // Early-victory flag: when the last remaining word of the current pool gets mastered mid-run
+  const earlyVictoryRef = useRef(false);
+
+  // Compute the active pool IDs (current dictée, filtered by EN availability if applicable)
+  const activePoolIds = (() => {
+    const baseIds = selectedDictee === "Toutes les dictées"
+      ? ALL_WORDS.map(w => w.id)
+      : [...(DICTEES[selectedDictee] || new Set())];
+    return lang === "en" ? baseIds.filter(id => WORDS_EN[id]) : baseIds;
+  })();
+  const poolRemaining = activePoolIds.filter(id => !mastered.has(id)).length;
+  const poolTotal = activePoolIds.length;
 
   // Cheat: + adds life
   useEffect(() => {
@@ -941,16 +1084,21 @@ export default function App() {
     setShowFireworks(true);
 
     // ── Mastery tracking (per dictée session + persistent set)
+    // Rule: a word is "known" if this individual attempt was clean (no fail, no hint).
+    // This means even a word previously flagged "todo" in this session can be promoted
+    // to "mastered" if the child gets it right on a later re-queue attempt.
     if (!isBoss) {
-      const wasFlaggedTodo = sessionResults[w.id] === "todo";
-      const perfect = !wordHadFail && !usedHints && !wasFlaggedTodo;
-      if (perfect) {
+      const thisAttemptClean = !wordHadFail && !usedHints;
+      if (thisAttemptClean) {
         setSessionResults(prev => ({ ...prev, [w.id]: "mastered" }));
-        // Add to persistent mastered set
-        setMastered(prev => {
-          if (prev.has(w.id)) return prev;
-          const next = new Set(prev); next.add(w.id); saveMastered(next); return next;
-        });
+        if (!mastered.has(w.id)) {
+          const nextMastered = new Set(mastered); nextMastered.add(w.id);
+          saveMastered(nextMastered); setMastered(nextMastered);
+          // If this was the last un-mastered word of the active pool → trigger early victory
+          if (activePoolIds.length > 0 && activePoolIds.every(id => nextMastered.has(id))) {
+            earlyVictoryRef.current = true;
+          }
+        }
       } else {
         setSessionResults(prev => ({ ...prev, [w.id]: prev[w.id] || "todo" }));
       }
@@ -1027,6 +1175,12 @@ export default function App() {
 
   const proceedAfterWin = () => {
     setNewCreature(null);
+    // If the pool was completed mid-run, skip everything and go to victory directly
+    if (earlyVictoryRef.current) {
+      earlyVictoryRef.current = false;
+      setScreen("victory");
+      return;
+    }
     // After boss victory: clear boss word, show zone recap
     if (isBoss) { setIsBoss(false); setBossWord(null); setShowMap(true); return; }
     // Check if boss should trigger (after every 5 normal words: indices 4, 9, 14, 19)
@@ -1282,6 +1436,19 @@ export default function App() {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
             <span style={{color:"#a3836a",fontSize:"0.75rem"}}>📍 {zones[zoneIdx]} — {currentIdx+1}/{wordQueue.length}</span>
             {nextCreature && <span style={{color:"#a3836a",fontSize:"0.7rem"}}>{nextCreature.emoji} dans {Math.max(0,nextCreature.at-totalWins)}</span>}
+          </div>
+          {/* Mastery progress toward 100% on the current dictée */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"6px 10px",borderRadius:10,background: poolRemaining===0 ? "rgba(34,197,94,0.15)" : "rgba(251,191,36,0.08)",border: poolRemaining===0 ? "1px solid rgba(34,197,94,0.4)" : "1px solid rgba(251,191,36,0.2)"}}>
+            <span style={{fontSize:"0.95rem"}}>{poolRemaining===0 ? "🏆" : "🎯"}</span>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.72rem",color: poolRemaining===0 ? "#22c55e" : "#fbbf24",fontWeight:600}}>
+                <span>{poolRemaining===0 ? "Dictée 100 % maîtrisée !" : `Encore ${poolRemaining} mot${poolRemaining>1?"s":""} à maîtriser`}</span>
+                <span style={{color:"#a3836a",fontWeight:500}}>{poolTotal - poolRemaining}/{poolTotal}</span>
+              </div>
+              <div style={{marginTop:3,height:4,background:"rgba(0,0,0,0.3)",borderRadius:3,overflow:"hidden"}}>
+                <div style={{width:`${poolTotal ? ((poolTotal - poolRemaining) / poolTotal) * 100 : 0}%`,height:"100%",background: poolRemaining===0 ? "linear-gradient(90deg,#22c55e,#16a34a)" : "linear-gradient(90deg,#fbbf24,#f59e0b)",transition:"width 0.4s"}} />
+              </div>
+            </div>
           </div>
           <div style={{textAlign:"center",marginBottom:16}}>
             <button onClick={() => setShowFullMap(!showFullMap)} style={{padding:"6px 14px",borderRadius:8,border:"1px solid rgba(251,191,36,0.3)",background:"rgba(251,191,36,0.1)",color:"#fbbf24",fontSize:"0.75rem",fontWeight:600,fontFamily:"'Fredoka',sans-serif",cursor:"pointer"}}>
